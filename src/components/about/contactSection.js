@@ -219,7 +219,8 @@ export default function ContactSection() {
                       className="text-gray-600"
                       style={{ fontFamily: "Roboto, serif" }}
                     >
-                      Oshodi-Isolo Local Government Secretariat
+                      Oshodi-Isolo Local Government Secretariat, 72 Oyetayo
+                      Street, Oshodi, Lagos.
                       <br />
                       Lagos State, Nigeria
                     </p>
@@ -297,8 +298,8 @@ export default function ContactSection() {
                 className="text-emerald-100 mb-6"
                 style={{ fontFamily: "Roboto, serif" }}
               >
-                For urgent matters affecting our community, don&apos;t hesitate to
-                reach out directly.
+                For urgent matters affecting our community, don&apos;t hesitate
+                to reach out directly.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <button

@@ -4,6 +4,7 @@
 
 import React from "react";
 import { useSlideIn, useFadeIn } from "../../animation/aboutAnimate";
+import Image from "next/image";
 
 export default function BiographySection() {
   const [sectionRef, sectionStyle] = useSlideIn("up", 0);
@@ -37,7 +38,7 @@ export default function BiographySection() {
           <div ref={imageRef} style={imageStyle} className="relative">
             <div className="relative overflow-hidden rounded-2xl shadow-2xl transform hover:scale-105 transition-all duration-500">
               {/* Placeholder for actual image */}
-              <div className="aspect-[4/5] bg-gradient-to-br from-emerald-400 via-teal-500 to-blue-600 flex items-center justify-center">
+              {/* <div className="aspect-[4/5] bg-gradient-to-br from-emerald-400 via-teal-500 to-blue-600 flex items-center justify-center">
                 <div className="text-center text-white">
                   <div className="w-32 h-32 mx-auto mb-4 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
                     <span
@@ -54,7 +55,17 @@ export default function BiographySection() {
                     Official Portrait
                   </p>
                 </div>
-              </div>
+              </div> */}
+
+              <Image
+                src="/img/kendoo.webp"
+                alt="Official portrait of Otunba Kehinde Oloyode Almaroof"
+                width={800}
+                height={1000}
+                layout="responsive"
+                objectFit="cover"
+                className="aspect-[4/5]"
+              />
 
               {/* Decorative Elements */}
               <div className="absolute -top-4 -right-4 w-24 h-24 border-4 border-emerald-300 rounded-full opacity-60"></div>

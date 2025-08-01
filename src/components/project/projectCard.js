@@ -1,4 +1,6 @@
-//src/coponents/project/projectCard.js
+// src/components/project/projectCard.js
+
+"use client";
 
 import { useFadeIn, useSlideIn } from "@/animation/aboutAnimate";
 import Image from "next/image";
@@ -6,9 +8,7 @@ import Image from "next/image";
 export const ProjectCard = ({ project }) => {
   const [ref, cardAnimation] = useSlideIn("up", 100);
   const statusColor =
-        project.status === "Completed" ? "bg-green-500" : "bg-amber-500";
-    
-    const image = '/img/road.jpg';
+    project.status === "Completed" ? "bg-emerald-600" : "bg-amber-500";
 
   return (
     <div
