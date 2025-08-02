@@ -1,4 +1,4 @@
-//src/app/about/contactSection.js
+//src/components/contact/contactSection.js
 
 "use client";
 

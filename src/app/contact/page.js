@@ -1,5 +1,4 @@
 //src/app/contact/page.js
-
 "use client";
 
 import React, { useState, useMemo } from "react";
@@ -7,6 +6,7 @@ import ContactHeader from "../../components/contact/contactHeader";
 import QuickContacts from "../../components/contact/quickContacts";
 import ContactFilter from "../../components/contact/contactFilter";
 import ContactGrid from "../../components/contact/contactGrid";
+import ContactSection from "../../components/contact/contactSection";
 import {
   contactData,
   contactCategories,
@@ -91,9 +91,6 @@ const ContactPage = () => {
       <ContactHeader />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-        {/* Quick Contacts Section */}
-        <QuickContacts quickContacts={quickContacts} />
-
         {/* Filter Section */}
         <ContactFilter
           categories={contactCategories}
@@ -185,7 +182,7 @@ const ContactPage = () => {
           />
         )}
 
-        {/* Office Hours & Additional Info */}
+        {/* Office Hours, Location, Response Time */}
         <div className="mt-16 bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-xl dark:shadow-gray-700/30 p-8 transition-colors duration-300">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Office Hours */}
@@ -288,6 +285,12 @@ const ContactPage = () => {
             </div>
           </div>
         </div>
+
+        {/* Quick Contacts Section */}
+        <QuickContacts quickContacts={quickContacts} />
+
+        {/* Contact Form Section */}
+        <ContactSection />
       </div>
     </div>
   );
