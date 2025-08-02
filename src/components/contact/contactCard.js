@@ -1,7 +1,7 @@
 //src/components/contact/ContactCard.js
-
 import React, { useState } from "react";
 import { useFadeIn } from "../../animation/aboutAnimate";
+import Image from "next/image";
 
 const ContactCard = ({ contact, delay = 0 }) => {
   const [ref, isVisible] = useFadeIn(delay);
@@ -27,11 +27,28 @@ const ContactCard = ({ contact, delay = 0 }) => {
       }}
     >
       {/* Header */}
-      <div className="relative bg-gradient-to-br from-blue-600 to-indigo-700 dark:from-blue-800 dark:to-indigo-900 p-6 text-white transition-colors duration-300">
-        <h3 className="text-xl font-bold">{contact.name}</h3>
-        <p className="text-blue-100 dark:text-blue-200 mt-1">
-          {contact.position}
-        </p>
+      <div className="relative bg-gradient-to-br from-blue-600 to-indigo-700 dark:from-blue-800 dark:to-indigo-900 p-6 text-white transition-colors duration-300 flex items-center gap-4">
+        {/* Image */}
+        {contact.image && (
+          <div className="flex-shrink-0">
+            <Image
+              src={contact.image}
+              alt={`Profile picture of ${contact.name}`}
+              width={80}
+              height={80}
+              className="rounded-full border-2 border-white/50 shadow-md object-cover"
+            />
+          </div>
+        )}
+
+        {/* Text Content */}
+        <div>
+          <h3 className="text-xl font-bold">{contact.name}</h3>
+          <p className="text-blue-100 dark:text-blue-200 mt-1">
+            {contact.position}
+          </p>
+        </div>
+
         {contact.ward && (
           <span className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-medium">
             Ward {contact.ward}
@@ -66,7 +83,10 @@ const ContactCard = ({ contact, delay = 0 }) => {
 
           {/* Call + Email Buttons */}
           <div className="flex gap-2">
-            <button className="flex-1 bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white py-2 px-4 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition-all duration-200">
+            <button
+              onClick={handleCall}
+              className="flex-1 bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white py-2 px-4 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition-all duration-200"
+            >
               <svg
                 className="w-4 h-4"
                 fill="none"
@@ -82,7 +102,10 @@ const ContactCard = ({ contact, delay = 0 }) => {
               </svg>
               Call
             </button>
-            <button className="flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white py-2 px-4 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition-all duration-200">
+            <button
+              onClick={handleEmail}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white py-2 px-4 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition-all duration-200"
+            >
               <svg
                 className="w-4 h-4"
                 fill="none"

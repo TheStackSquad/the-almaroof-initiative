@@ -11,7 +11,6 @@ import LeadershipTeam from "../../components/about/leadershipTeam";
 import OfficeStructure from "../../components/about/officeStructure";
 import AchievementsSection from "../../components/about/achievementsSection";
 import VisionSection from "../../components/about/visionSection";
-import ContactSection from "../../components/about/contactSection";
 
 export default function AboutPage() {
   const [activeSection, setActiveSection] = useState("overview");
@@ -25,7 +24,6 @@ export default function AboutPage() {
             <BiographySection />
             <AchievementsSection />
             <VisionSection />
-            <ContactSection />
           </>
         );
       case "biography":
@@ -43,7 +41,6 @@ export default function AboutPage() {
             <BiographySection />
             <AchievementsSection />
             <VisionSection />
-            <ContactSection />
           </>
         );
     }

@@ -4,6 +4,7 @@
 
 import React from "react";
 import { useFadeIn, useSlideIn } from "../../animation/aboutAnimate";
+import Link from "next/link";
 
 export default function HeroSection() {
   const [titleRef, titleVisible] = useFadeIn(200);
@@ -78,20 +79,26 @@ export default function HeroSection() {
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-          <button
-            className="px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-full 
-                           transform hover:scale-105 transition-all duration-300 shadow-2xl hover:shadow-emerald-500/25"
-            style={{ fontFamily: "Montserrat, sans-serif" }}
-          >
-            Learn More About My Vision
-          </button>
-          <button
-            className="px-8 py-4 border-2 border-white text-white hover:bg-white hover:text-emerald-800 
-                           font-bold rounded-full transform hover:scale-105 transition-all duration-300"
-            style={{ fontFamily: "Montserrat, sans-serif" }}
-          >
-            Get In Touch
-          </button>
+          <div>
+            <a href="/projects">
+              <button
+                className="px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-full 
+                     transform hover:scale-105 transition-all duration-300 shadow-2xl hover:shadow-emerald-500/25"
+                style={{ fontFamily: "Montserrat, sans-serif" }}
+              >
+                Learn More About My Vision
+              </button>
+            </a>
+            <a href="/contact">
+              <button
+                className="px-8 py-4 border-2 border-white text-white hover:bg-white hover:text-emerald-800 
+                     font-bold rounded-full transform hover:scale-105 transition-all duration-300"
+                style={{ fontFamily: "Montserrat, sans-serif" }}
+              >
+                Get In Touch
+              </button>
+            </a>
+          </div>
         </div>
       </div>
 

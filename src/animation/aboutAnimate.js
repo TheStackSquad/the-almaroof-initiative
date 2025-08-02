@@ -128,7 +128,8 @@ export const useStaggerAnimation = (itemCount, delay = 100) => {
   const ref = useRef();
 
   useEffect(() => {
-    const currentRef = ref.current; // Copy ref to variable
+    const currentRef = ref.current;
+    if (!currentRef) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -138,19 +139,16 @@ export const useStaggerAnimation = (itemCount, delay = 100) => {
               setVisibleItems(i);
             }, i * delay);
           }
+          observer.unobserve(currentRef);
         }
       },
       { threshold: 0.1 }
     );
 
-    if (currentRef) {
-      observer.observe(currentRef);
-    }
+    observer.observe(currentRef);
 
     return () => {
-      if (currentRef) {
-        observer.unobserve(currentRef);
-      }
+      observer.disconnect();
     };
   }, [itemCount, delay]);
 
