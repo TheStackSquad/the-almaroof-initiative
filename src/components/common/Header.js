@@ -27,6 +27,7 @@ const navItems = [
   },
   { path: "/news", label: "News" },
   { path: "/projects", label: "Projects" },
+  { path: "/community", label: "Community" },
   { path: "/contact", label: "Contact" },
 ];
 
