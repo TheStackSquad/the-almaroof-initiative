@@ -22,7 +22,7 @@ const ContactHeader = () => {
         ></div>
       </div>
 
-      <div className="max-w-6xl mx-auto text-center relative z-10">
+      <div className="max-w-6xl mx-auto mt-6 text-center relative z-10">
         {/* Main Title */}
         <div ref={titleRef} style={titleStyle}>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">

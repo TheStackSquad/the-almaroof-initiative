@@ -71,8 +71,10 @@ export default function CommunityHub() {
   ];
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 dark:bg-gray-900 dark:text-gray-100
-    bg-gray-50 text-gray-900`}>
+    <div
+      className={`min-h-screen transition-colors duration-300 dark:bg-gray-900 dark:text-gray-100
+    bg-gray-50 text-gray-900`}
+    >
       <style jsx global>{`
         h1,
         h2,
@@ -120,9 +122,12 @@ export default function CommunityHub() {
               >
                 Explore Services
               </Link>
-              <button className="px-6 py-3 border-2 border-white text-white rounded-lg font-semibold hover:bg-white hover:text-indigo-600 transition-colors duration-300">
+              <Link
+                href="/contact"
+                className="px-6 py-3 border-2 border-white text-white rounded-lg font-semibold hover:bg-white hover:text-indigo-600 transition-colors duration-300"
+              >
                 Emergency Contacts
-              </button>
+              </Link>
             </div>
           </div>
           <div className="absolute top-0 right-0 w-64 h-64 opacity-10">
@@ -227,8 +232,12 @@ export default function CommunityHub() {
         </div>
 
         {/* Quick Actions */}
-        <div className={`p-6 rounded-xl border-2 bg-white border-gray-200 dark:bg-gray-800 dark:border-gray-700`}>
-          <h3 className="text-xl font-bold mb-4 text-center dark:text-white">Quick Actions</h3>
+        <div
+          className={`p-6 rounded-xl border-2 bg-white border-gray-200 dark:bg-gray-800 dark:border-gray-700`}
+        >
+          <h3 className="text-xl font-bold mb-4 text-center dark:text-white">
+            Quick Actions
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <button className="p-4 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-lg hover:bg-red-200 dark:hover:bg-red-800 transition-colors">
               <div className="text-2xl mb-2">🚨</div>
