@@ -1,3 +1,5 @@
+
+
 // src/components/common/Header.jsx
 "use client";
 
@@ -5,8 +7,8 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sun, Moon, Menu, X, ChevronDown } from "lucide-react";
 import Link from "next/link";
-import { NavDropdown } from "./navDropdown";
-import { useDropdown } from "@/utils/hooks/useDropdown";
+import { NavDropdown } from "../../utils/hooks/navDropdown";
+import { useDropdown } from "../../utils/hooks/useDropdown";
 import {
   mobileMenuVariants,
   iconRotateVariants,
@@ -27,14 +29,29 @@ const navItems = [
   },
   { path: "/news", label: "News" },
   { path: "/projects", label: "Projects" },
-  { path: "/community", label: "Community" },
+  {
+    path: "/community",
+    label: "Community",
+    dropdown: [
+      { id: "hub", label: "Community Hub", icon: "🏛️", path: "/community" },
+      { id: "services", label: "Local Services", icon: "🏢", path: "/community/services" },
+      { id: "streets", label: "Streets & Councilors", icon: "🏘️", path: "/community/streets-councilors" },
+      { id: "institutions", label: "Public Institutions", icon: "🏫", path: "/community/yellow-page" },
+    ],
+  },
   { path: "/contact", label: "Contact" },
 ];
 
 export default function Header() {
   const [theme, setTheme] = useState("light");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [dropdownRef, isAboutOpen, toggleAbout, closeAbout] = useDropdown();
+
+  // Use separate hooks for each dropdown
+  const [aboutDropdownRef, isAboutOpen, toggleAbout, closeAbout] =
+    useDropdown();
+  const [communityDropdownRef, isCommunityOpen, toggleCommunity, closeCommunity] =
+    useDropdown();
+
   const menuRef = useRef(null);
   const menuButtonRef = useRef(null);
 
@@ -75,80 +92,116 @@ export default function Header() {
     document.documentElement.classList.toggle("dark", newTheme === "dark");
   };
 
+  // Corrected: Move the function definition to the parent scope
   const handleMobileLinkClick = () => {
     setMenuOpen(false);
+    // Close all dropdowns when a mobile link is clicked
     closeAbout();
+    closeCommunity();
   };
 
-  const renderDesktopNavItem = (item) => (
-    <div
-      key={item.path}
-      className="relative"
-      ref={item.dropdown ? dropdownRef : null}
-    >
-      {item.dropdown ? (
-        <>
-          <button
-            onClick={toggleAbout}
-            className="relative group px-4 py-2 rounded-lg transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-1"
+  const renderDesktopNavItem = (item) => {
+    const isDropdownOpen = item.label === "About" ? isAboutOpen : isCommunityOpen;
+    const toggleDropdown = item.label === "About" ? toggleAbout : toggleCommunity;
+    const closeDropdown = item.label === "About" ? closeAbout : closeCommunity;
+    const dropdownRef = item.label === "About" ? aboutDropdownRef : communityDropdownRef;
+
+    if (item.dropdown) {
+      return (
+        <div key={item.path} className="relative" ref={dropdownRef}>
+          <div className="flex items-center">
+            {/* The main link that redirects */}
+            <Link
+              href={item.path}
+              className="relative group px-4 py-2 rounded-l-lg transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-1"
+            >
+              <span className="relative z-10 group-hover:text-primary transition-colors duration-300">
+                {item.label}
+              </span>
+            </Link>
+
+            {/* The dropdown toggle button */}
+            <button
+              onClick={toggleDropdown}
+              className="relative group px-2 py-2 rounded-r-lg transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+              aria-label={`Toggle ${item.label} dropdown`}
+            >
+              <motion.span
+                animate={{ rotate: isDropdownOpen ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
+                className="relative z-10"
+              >
+                <ChevronDown size={16} />
+              </motion.span>
+              <motion.div
+                className="absolute inset-0 bg-primary/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                layoutId="desktopHover"
+              />
+            </button>
+          </div>
+          <NavDropdown
+            items={item.dropdown}
+            isOpen={isDropdownOpen}
+            onClose={closeDropdown}
+            basePath={item.path}
+          />
+        </div>
+      );
+    } else {
+      return (
+        <div key={item.path}>
+          <Link
+            href={item.path}
+            className="relative group px-4 py-2 rounded-lg transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-800"
           >
             <span className="relative z-10 group-hover:text-primary transition-colors duration-300">
               {item.label}
             </span>
-            <motion.span
-              animate={{ rotate: isAboutOpen ? 180 : 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <ChevronDown size={16} />
-            </motion.span>
             <motion.div
               className="absolute inset-0 bg-primary/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"
               layoutId="desktopHover"
             />
-          </button>
-          <NavDropdown
-            items={item.dropdown}
-            isOpen={isAboutOpen}
-            onClose={closeAbout}
-          />
-        </>
-      ) : (
-        <Link
-          href={item.path}
-          className="relative group px-4 py-2 rounded-lg transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-        >
-          <span className="relative z-10 group-hover:text-primary transition-colors duration-300">
-            {item.label}
-          </span>
-          <motion.div
-            className="absolute inset-0 bg-primary/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            layoutId="desktopHover"
-          />
-        </Link>
-      )}
-    </div>
-  );
+          </Link>
+        </div>
+      );
+    }
+  };
 
-  const renderMobileNavItem = (item) => (
-    <div key={item.path}>
-      {item.dropdown ? (
-        <>
-          <button
-            onClick={toggleAbout}
-            className="w-full text-left block relative group px-4 py-3 rounded-lg transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-between"
-          >
-            <span className="relative z-10 group-hover:text-primary transition-colors duration-300">
-              {item.label}
-            </span>
-            <motion.span
-              animate={{ rotate: isAboutOpen ? 180 : 0 }}
-              transition={{ duration: 0.2 }}
+  const renderMobileNavItem = (item) => {
+    // Determine which dropdown state and functions to use
+    const isDropdownOpen = item.label === "About" ? isAboutOpen : isCommunityOpen;
+    const toggleDropdown = item.label === "About" ? toggleAbout : toggleCommunity;
+    const closeDropdown = item.label === "About" ? closeAbout : closeCommunity;
+    const hrefBase = item.path;
+
+    if (item.dropdown) {
+      return (
+        <div key={item.path} className="flex flex-col">
+          <div className="flex justify-between items-center w-full">
+            <Link
+              href={item.path}
+              onClick={handleMobileLinkClick}
+              className="w-full text-left block relative group px-4 py-3 rounded-lg transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-between"
             >
-              <ChevronDown size={16} />
-            </motion.span>
-          </button>
+              <span className="relative z-10 group-hover:text-primary transition-colors duration-300">
+                {item.label}
+              </span>
+            </Link>
+            <button
+              onClick={toggleDropdown}
+              className="p-2 -ml-8 rounded-lg"
+              aria-label={`Toggle ${item.label} dropdown`}
+            >
+              <motion.span
+                animate={{ rotate: isDropdownOpen ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <ChevronDown size={16} />
+              </motion.span>
+            </button>
+          </div>
           <AnimatePresence>
-            {isAboutOpen && (
+            {isDropdownOpen && (
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
@@ -159,7 +212,7 @@ export default function Header() {
                 {item.dropdown.map((subItem) => (
                   <Link
                     key={subItem.id}
-                    href={`/about#${subItem.id}`}
+                    href={subItem.path || `${hrefBase}#${subItem.id}`}
                     onClick={handleMobileLinkClick}
                     className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
                   >
@@ -172,9 +225,12 @@ export default function Header() {
               </motion.div>
             )}
           </AnimatePresence>
-        </>
-      ) : (
+        </div>
+      );
+    } else {
+      return (
         <Link
+          key={item.path}
           href={item.path}
           onClick={handleMobileLinkClick}
           className="block relative group px-4 py-3 rounded-lg transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -187,9 +243,9 @@ export default function Header() {
             layoutId="mobileHover"
           />
         </Link>
-      )}
-    </div>
-  );
+      );
+    }
+  };
 
   return (
     <header className="w-full fixed top-0 z-50 bg-white/80 dark:bg-dark/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700">

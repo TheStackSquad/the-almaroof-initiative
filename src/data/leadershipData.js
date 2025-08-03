@@ -30,7 +30,7 @@ export const leadershipTeam = [
     description:
       "Coordinating administrative functions and ensuring smooth government operations.",
     icon: "📋",
-    image: "/images/path-to-image3.jpg",
+    image: "/img/placeholderMan.webp",
     color: "from-purple-500 to-pink-600",
   },
   {
@@ -40,7 +40,7 @@ export const leadershipTeam = [
     description:
       "Managing human resources and administrative processes across all departments.",
     icon: "👥",
-    image: "/images/path-to-image4.jpg",
+    image: "/img/placeholderMan.webp",
     color: "from-orange-500 to-red-600",
   },
   {
@@ -50,7 +50,7 @@ export const leadershipTeam = [
     description:
       "Overseeing infrastructure development, road maintenance, and public facilities.",
     icon: "🏗️",
-    image: "/images/path-to-image5.jpg",
+    image: "/img/placeholderMan.webp",
     color: "from-yellow-500 to-orange-600",
   },
   {
@@ -60,7 +60,7 @@ export const leadershipTeam = [
     description:
       "Managing fiscal operations, budget planning, and financial transparency.",
     icon: "💰",
-    image: "/images/path-to-image6.jpg",
+    image: "/img/placeholderFemale.webp",
     color: "from-green-500 to-emerald-600",
   },
   {
@@ -70,7 +70,7 @@ export const leadershipTeam = [
     description:
       "Leading healthcare initiatives and community health programs.",
     icon: "🏥",
-    image: "/images/path-to-image7.jpg",
+    image: "/img/placeholderFemale.webp",
     color: "from-red-500 to-pink-600",
   },
   {
@@ -80,7 +80,7 @@ export const leadershipTeam = [
     description:
       "Promoting educational excellence and youth empowerment programs.",
     icon: "🎓",
-    image: "/images/path-to-image8.jpg",
+    image: "/img/placeholderMan.webp",
     color: "from-teal-500 to-cyan-600",
   },
 ];

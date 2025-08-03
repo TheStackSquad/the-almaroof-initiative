@@ -1,17 +1,19 @@
 // src/utils/hooks/useDropdown.js
-import { useState, useRef, useEffect } from "react";
+"use client";
 
-export const useDropdown = () => {
+import { useState, useEffect, useRef } from "react";
+
+export function useDropdown() {
   const [isOpen, setIsOpen] = useState(false);
-  const ref = useRef();
+  const dropdownRef = useRef(null);
 
-  const toggle = () => setIsOpen(!isOpen);
-  const close = () => setIsOpen(false);
+  const toggleDropdown = () => setIsOpen((prev) => !prev);
+  const closeDropdown = () => setIsOpen(false);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (ref.current && !ref.current.contains(event.target)) {
-        close();
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        closeDropdown();
       }
     };
 
@@ -24,5 +26,5 @@ export const useDropdown = () => {
     };
   }, [isOpen]);
 
-  return [ref, isOpen, toggle, close];
-};
+  return [dropdownRef, isOpen, toggleDropdown, closeDropdown];
+}
