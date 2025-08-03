@@ -28,30 +28,29 @@ export const ProjectCard = ({ project }) => {
       </div>
 
       {/* Card Body */}
-      <div className="bg-white p-6 dark:bg-gray-800">
+      <div class="bg-white p-6 dark:bg-gray-800 relative">
+        {" "}
+        {/* Added 'relative' class here */}
         {/* Status Badge */}
         <span
-          className={`absolute -top-3 right-4 rounded-full px-3 py-1 text-xs font-bold text-white ${statusColor}`}
+          class={`absolute top-2 right-2 rounded-full px-3 py-1 text-xs font-bold text-white ${statusColor}`}
         >
           {project.status}
         </span>
-
         {/* Title */}
-        <h3 className="mb-2 font-montserrat text-xl font-bold text-gray-900 dark:text-white">
+        <h3 class="mb-2 font-montserrat text-xl font-bold text-gray-900 dark:text-white">
           {project.title}
         </h3>
-
         {/* Description */}
-        <p className="mb-4 font-roboto text-gray-600 dark:text-gray-300">
+        <p class="mb-4 font-roboto text-gray-600 dark:text-gray-300">
           {project.description}
         </p>
-
         {/* Category & Date */}
-        <div className="flex items-center justify-between">
-          <span className="rounded-full bg-gray-100 px-3 py-1 text-xs dark:bg-gray-700">
+        <div class="flex items-center justify-between">
+          <span class="rounded-full bg-gray-100 px-3 py-1 text-xs dark:bg-gray-700">
             {project.category}
           </span>
-          <span className="text-xs text-gray-500">{project.date}</span>
+          <span class="text-xs text-gray-500">{project.date}</span>
         </div>
       </div>
     </div>
