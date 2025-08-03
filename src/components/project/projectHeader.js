@@ -8,7 +8,7 @@ export const ProjectHeader = ({ title, description }) => {
   const [ref, animation] = useSlideIn("down", 0);
 
   return (
-    <div ref={ref} style={animation} className="mb-12 text-center">
+    <div ref={ref} style={animation} className="mb-12 mt-8 text-center">
       {/* Main Title */}
       <h1 className="mb-4 font-montserrat text-4xl font-bold text-gray-900 dark:text-white md:text-5xl">
         {title || "Our Projects"} {/* Fallback title */}
