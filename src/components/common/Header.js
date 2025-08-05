@@ -38,12 +38,6 @@ const navItems = [
         icon: "🏢",
         path: "/community/services",
       },
-      // {
-      //   id: "streets",
-      //   label: "Streets & Councilors",
-      //   icon: "🏘️",
-      //   path: "/community/streets-councilors",
-      // },
       {
         id: "institutions",
         label: "Public Institutions",

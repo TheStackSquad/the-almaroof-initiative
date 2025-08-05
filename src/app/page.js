@@ -12,7 +12,8 @@ import {
 } from "@/animation/animate"; // Import all the animation variants
 
 export default function Home() {
-  const title = "The Almaroof Initiative: Leadership, Legacy, and Progress";
+  const title =
+    "The Almaroof Initiative: Leadership, Growth, and Community ";
 
   return (
     <motion.main

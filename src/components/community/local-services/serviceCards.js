@@ -1,10 +1,21 @@
 // src/components/community/local-services/serviceCard.js
-import React from "react";
 
-export default function ServiceCard({ service, openServiceModal }) {
+"use client";
+
+import React from "react";
+import { useRouter } from "next/navigation";
+
+export default function ServiceCard({ service }) {
+  const router = useRouter();
+
+  const handleBadgeClick = (onlineService) => {
+    // Example: "Apply for New Business Permit" → "apply"
+    const formSlug = onlineService.toLowerCase().split(" ")[0]; // crude but works for now
+    router.push(`/community/online-services/${service.id}/${formSlug}`);
+  };
+
   return (
     <div
-      onClick={() => openServiceModal(service)}
       className={`
         group rounded-xl overflow-hidden transition-all duration-300 
         hover:scale-105 hover:-translate-y-2 border-2 cursor-pointer
@@ -94,7 +105,8 @@ export default function ServiceCard({ service, openServiceModal }) {
               {service.onlineServices.slice(0, 3).map((onlineService, idx) => (
                 <span
                   key={idx}
-                  className="px-2 py-1 text-xs font-roboto bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded"
+                  onClick={() => handleBadgeClick(onlineService)}
+                  className="px-2 py-1 text-xs font-roboto bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded cursor-pointer hover:underline"
                 >
                   {onlineService}
                 </span>
