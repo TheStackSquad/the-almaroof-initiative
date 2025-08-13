@@ -55,7 +55,7 @@ export default function Home() {
         />
 
         <motion.h1
-          className="mt-5 text-5xl md:text-7xl font-medium mb-6 relative z-10
+          className="mt-9 text-5xl md:text-7xl font-medium mb-6 relative z-10
           text-gray-800 dark:text-white font-heading"
           style={{
             textShadow: "0 4px 20px rgba(0,0,0,0.1)",
@@ -114,7 +114,7 @@ export default function Home() {
       </motion.div>
 
       {/* Closen the gap and increase the z-index */}
-      <div className="mt-2 relative z-20 w-1/2">
+      <div className="mt-2 md:mt-4 relative z-20 w-[95%] sm:w-[85%] md:w-3/4 lg:w-2/3 xl:w-1/2 mx-auto">
         <AnimatedText />
       </div>
 
