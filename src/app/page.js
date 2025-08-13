@@ -10,6 +10,7 @@ import {
   glowVariants,
   particleVariants,
 } from "@/animation/animate";
+import AnimatedText from "@/components/common/animatedText";
 
 export default function Home() {
   const { t } = useTranslation();
@@ -17,13 +18,15 @@ export default function Home() {
 
   return (
     <motion.main
-      className="min-h-screen flex flex-col items-center justify-center p-8 relative overflow-hidden bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 transition-colors duration-300"
+      className="min-h-screen flex flex-col items-center justify-center p-8 relative
+      overflow-hidden bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900
+      dark:via-gray-800 dark:to-gray-700 transition-colors duration-300"
       variants={containerVariants}
       initial="hidden"
       animate="show"
     >
       {/* Background particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         {[...Array(8)].map((_, i) => (
           <motion.div
             key={i}
@@ -41,7 +44,7 @@ export default function Home() {
       </div>
 
       <motion.div
-        className="max-w-4xl mx-auto text-center relative z-10"
+        className="max-w-4xl mx-auto text-center relative z-20" // <-- Changed from z-10 to z-20
         style={{ perspective: "1000px" }}
       >
         <motion.div
@@ -52,7 +55,7 @@ export default function Home() {
         />
 
         <motion.h1
-          className="text-5xl md:text-7xl font-medium mb-6 relative z-10
+          className="mt-5 text-5xl md:text-7xl font-medium mb-6 relative z-10
           text-gray-800 dark:text-white font-heading"
           style={{
             textShadow: "0 4px 20px rgba(0,0,0,0.1)",
@@ -75,7 +78,7 @@ export default function Home() {
         </motion.h1>
 
         <motion.p
-          className="text-xl md:text-2xl font-bold font-body max-w-2xl mx-auto
+          className="mb-3 text-xl md:text-2xl font-bold font-body max-w-2xl mx-auto
           leading-relaxed text-gray-600 dark:text-gray-300"
           variants={paragraphVariants}
         >
@@ -110,8 +113,13 @@ export default function Home() {
         />
       </motion.div>
 
+      {/* Closen the gap and increase the z-index */}
+      <div className="mt-2 relative z-20 w-1/2">
+        <AnimatedText />
+      </div>
+
       <div
-        className="absolute inset-0 opacity-5 bg-black dark:bg-white"
+        className="absolute inset-0 opacity-5 bg-black dark:bg-white z-0" // <-- Added z-0 to the overlay
         style={{
           backgroundImage: `
             radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0),
