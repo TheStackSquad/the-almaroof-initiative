@@ -87,7 +87,7 @@ export const localServicesData = {
   onlineFirstServices: [
     {
       id: "business-permit",
-      name: "Business Permit Registration",
+      name: "Permit",
       category: "Online-First Services",
       priority: 1,
       contact: {
@@ -100,7 +100,7 @@ export const localServicesData = {
       status: "Available",
       description: "Register new businesses, renew permits, business name registration - now available online!",
       onlineServices: [
-        "Apply for New Business Permit",
+        "Apply for New Permit",
         "Renew Existing Permit",
         "Check Application Status",
         "Download Certificate",

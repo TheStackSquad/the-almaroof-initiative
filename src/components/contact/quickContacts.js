@@ -31,7 +31,7 @@ const QuickContacts = ({ quickContacts }) => {
   };
 
   return (
-    <section className="mb-8">
+    <section className="mb-8 mt-5">
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
           Quick Contacts

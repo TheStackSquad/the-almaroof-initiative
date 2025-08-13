@@ -1,5 +1,5 @@
 // src/app/community/page.js
-// src/app/community/page.js
+
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -45,7 +45,7 @@ export default function CommunityHub() {
       title: "Local Services",
       description: "Access government services online - Skip the queue, save time!",
       icon: "🏢",
-      path: "/community/services",
+      path: "/yellow-page",
       stats: `${Object.values(localServicesData).flat().length} services available`,
       color: "from-indigo-500 to-cyan-500",
       features: ["Online Applications", "24/7 Emergency Services", "Digital Payments"],

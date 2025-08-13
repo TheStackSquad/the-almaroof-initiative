@@ -1,15 +1,21 @@
 // src/components/community/localServices.js
 
-import { useState } from "react";
+"use client"; 
+
+import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
+import { useRouter } from "next/navigation";
 import { useFadeIn } from "@/animation/aboutAnimate";
 import {
   getAllServices,
   getServicesByCategory,
+  getServiceById, // NEW: Import helper function
 } from "@/data/localServicesData";
 import ServiceModal from "@/modal/serviceModal";
+import { generateServiceUrl } from "@/utils/route/routeValidator";
 
 // Import the new sub-components
-import ServiceCard from "./local-services/serviceCards";
+import ServiceCard from "@/components/community/local-services/serviceCards";
 import CategorySection from "./local-services/categorySection";
 
 export default function LocalServices() {
@@ -25,6 +31,58 @@ export default function LocalServices() {
   const [selectedService, setSelectedService] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const router = useRouter();
+  const authState = useSelector((state) => state.auth);
+  console.log("auth from redux:", authState);
+  const { isAuthenticated, isLoading } = authState;
+
+  // Handle service actions with proper auth check
+  const handleServiceAction = (service, actionType) => {
+    if (actionType === "details") {
+      openServiceModal(service);
+      return;
+    }
+
+    if (actionType === "online") {
+      const targetUrl = getServiceUrl(service);
+
+      // Check if auth state is still loading
+      if (isLoading) {
+        console.log("Auth state loading, please wait...");
+        return;
+      }
+
+      if (!isAuthenticated) {
+        const encodedRedirect = encodeURIComponent(targetUrl);
+        router.push(
+          `/community/online-services/protected-route?redirect=${encodedRedirect}`
+        );
+      } else {
+        router.push(targetUrl);
+      }
+    }
+  };
+
+  const getServiceUrl = (service) => {
+    const url = generateServiceUrl(service.id);
+
+    if (!url) {
+      console.warn(`Could not generate URL for service: ${service.id}`);
+      if (service.id === "business-permits") {
+        return "/community/online-services/business-permit/apply/";
+      }
+      return `/community/online-services/${service.id}/${
+        service.primaryAction || "service"
+      }`;
+    }
+    return url;
+  };
+
+  const openServiceModal = (service) => {
+    setSelectedService(service);
+    setIsModalOpen(true);
+  };
+
   const categories = [
     {
       name: "Emergency Services",
@@ -37,29 +95,19 @@ export default function LocalServices() {
     { name: "Administrative Services", icon: "📋", color: "purple" },
   ];
 
-  const openServiceModal = (service) => {
-    setSelectedService(service);
-    setIsModalOpen(true);
-  };
-
   const getServicesByFilter = () => {
-    let services = [];
+    const services =
+      selectedCategory === "all"
+        ? getAllServices()
+        : getServicesByCategory(selectedCategory);
 
-    if (selectedCategory === "all") {
-      services = getAllServices();
-    } else {
-      services = getServicesByCategory(selectedCategory);
-    }
-
-    if (searchTerm) {
-      services = services.filter(
-        (service) =>
-          service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          service.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    return services;
+    return searchTerm
+      ? services.filter(
+          (service) =>
+            service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            service.description.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      : services;
   };
 
   return (
@@ -138,7 +186,8 @@ export default function LocalServices() {
               <ServiceCard
                 key={service.id}
                 service={service}
-                openServiceModal={openServiceModal}
+                onAction={handleServiceAction}
+                isAuthenticated={isAuthenticated}
               />
             ))}
           </div>

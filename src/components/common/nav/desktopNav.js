@@ -90,7 +90,7 @@ export default function DesktopNav({
     <nav className="hidden lg:flex items-center space-x-2 font-cinzel text-gray-700 dark:text-gray-300 text-sm">
       {navItems.map(renderDesktopNavItem)}
       <div className="ml-4">
-        <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+        {/* <ThemeToggle theme={theme} toggleTheme={toggleTheme} /> */}
       </div>
     </nav>
   );

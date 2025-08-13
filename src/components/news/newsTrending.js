@@ -1,12 +1,24 @@
 // src/components/news/newsTrending.js
 
+"use client";
+
 import { useSlideIn, useStaggerAnimation } from "../../animation/aboutAnimate";
 import Image from "next/image";
-import trendingNews from "../../data/trendingData"; // Import the data
+// Import the data keys instead of the full data object
+import trendingNewsKeys from "../../data/trendingData";
+// Import the translation hook
+import { useTranslation } from "react-i18next";
 
 const NewsTrending = () => {
+  const { t } = useTranslation(); // Initialize the translation hook
   const [titleRef, titleStyle] = useSlideIn("up", 200);
   const [listRef, visibleItems] = useStaggerAnimation(5, 150);
+
+  // Map over the keys to get the translated news items
+  const translatedNews = trendingNewsKeys.map((item) => ({
+    ...item,
+    ...t(item.key), // Use the 'key' to get the translated object
+  }));
 
   return (
     <section className="py-16 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 transition-colors duration-500">
@@ -32,30 +44,31 @@ const NewsTrending = () => {
                   </svg>
                 </div>
                 <span className="px-3 py-1 bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 text-sm font-semibold rounded-full">
-                  TRENDING NOW
+                  {t("news.trending.live_updates")}{" "}
+                  {/* Use key for translation */}
                 </span>
               </div>
               <h2
                 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4"
                 style={{ fontFamily: "Montserrat, sans-serif" }}
               >
-                What&apos;s Hot Right Now
+                {t("news.trending.title")} {/* Use key for translation */}
               </h2>
               <p
                 className="text-lg text-gray-600 dark:text-gray-300 mb-8"
                 style={{ fontFamily: "Roboto, sans-serif" }}
               >
-                Stay ahead of the curve with the most popular and rapidly
-                growing stories across all categories.
+                {t("news.trending.description")} {/* Use key for translation */}
               </p>
               <div className="flex items-center space-x-6 text-sm text-gray-500 dark:text-gray-400">
                 <div className="flex items-center">
                   <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
-                  <span>Live Updates</span>
+                  <span>{t("news.trending.live_updates")}</span> {/* Use key */}
                 </div>
                 <div className="flex items-center">
                   <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
-                  <span>Real-time Trends</span>
+                  <span>{t("news.trending.real_time_trends")}</span>{" "}
+                  {/* Use key */}
                 </div>
               </div>
             </div>
@@ -63,7 +76,7 @@ const NewsTrending = () => {
           {/* Right Side - Trending List */}
           <div className="lg:w-2/3">
             <div ref={listRef} className="space-y-4">
-              {trendingNews.map((news, index) => (
+              {translatedNews.map((news, index) => (
                 <article
                   key={news.id}
                   className={`group p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-500 transform hover:-translate-y-1 cursor-pointer border border-gray-200 dark:border-gray-700 flex items-start ${
@@ -88,7 +101,8 @@ const NewsTrending = () => {
                     <div className="mb-2">
                       <div className="flex items-center mb-1">
                         <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 text-xs font-semibold rounded-full mr-3">
-                          {news.category}
+                          {news.category}{" "}
+                          {/* Now comes from the translated object */}
                         </span>
                         <span
                           className="text-xs text-gray-500 dark:text-gray-400"
@@ -101,15 +115,16 @@ const NewsTrending = () => {
                         className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300"
                         style={{ fontFamily: "Montserrat, sans-serif" }}
                       >
-                        {news.title}
+                        {news.title}{" "}
+                        {/* Now comes from the translated object */}
                       </h3>
                     </div>
                   </div>
-                  {/* Trend and arrow, ensuring they're aligned to the right */}
+                  {/* Trend and arrow */}
                   <div className="flex-shrink-0 ml-4 flex flex-col items-end justify-between self-stretch">
                     {/* Trend Indicator */}
                     <div className="px-3 py-2 bg-gradient-to-r from-orange-100 to-red-100 dark:from-orange-900 dark:to-red-900 text-orange-600 dark:text-orange-300 rounded-xl text-sm font-semibold mb-2">
-                      {news.trend}
+                      {news.trend} {/* Now comes from the translated object */}
                     </div>
                     {/* Arrow */}
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 self-end">
@@ -134,7 +149,7 @@ const NewsTrending = () => {
             {/* View All Trending Button */}
             <div className="mt-8 text-center">
               <button className="px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-xl hover:from-orange-600 hover:to-red-600 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
-                View All Trending Stories
+                {t("news.trending.view_all")} {/* Use key for translation */}
                 <svg
                   className="w-4 h-4 ml-2 inline"
                   fill="none"

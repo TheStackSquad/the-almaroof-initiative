@@ -47,7 +47,7 @@ export const ProjectCard = ({ project }) => {
         </p>
         {/* Category & Date */}
         <div class="flex items-center justify-between">
-          <span class="rounded-full bg-gray-100 px-3 py-1 text-xs dark:bg-gray-700">
+          <span class="rounded-full bg-gray-100 px-3 py-1 text-xs dark:bg-yellow-700">
             {project.category}
           </span>
           <span class="text-xs text-gray-500">{project.date}</span>
