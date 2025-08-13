@@ -2,27 +2,27 @@
 "use client";
 
 import { motion } from "framer-motion";
-
+import { useTranslation } from "react-i18next";
 import {
   containerVariants,
   titleWordVariants,
   paragraphVariants,
   glowVariants,
   particleVariants,
-} from "@/animation/animate"; // Import all the animation variants
+} from "@/animation/animate";
 
 export default function Home() {
-  const title =
-    "The Almaroof Initiative: Leadership, Growth, and Community ";
+  const { t } = useTranslation();
+  const title = t("home.title");
 
   return (
     <motion.main
       className="min-h-screen flex flex-col items-center justify-center p-8 relative overflow-hidden bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 transition-colors duration-300"
-      variants={containerVariants} // Apply container variants to the main element
+      variants={containerVariants}
       initial="hidden"
       animate="show"
     >
-      {/* Animated background particles */}
+      {/* Background particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(8)].map((_, i) => (
           <motion.div
@@ -32,10 +32,10 @@ export default function Home() {
               left: `${15 + i * 12}%`,
               top: `${20 + (i % 3) * 25}%`,
             }}
-            variants={particleVariants} // Apply particle variants
+            variants={particleVariants}
             initial="hidden"
-            animate={["show", "float"]} // Animate with both 'show' and 'float' states
-            custom={i} // Pass custom prop for staggered animation
+            animate={["show", "float"]}
+            custom={i}
           />
         ))}
       </div>
@@ -43,21 +43,17 @@ export default function Home() {
       <motion.div
         className="max-w-4xl mx-auto text-center relative z-10"
         style={{ perspective: "1000px" }}
-        // You can apply containerVariants here too if you want the inner div to also animate
-        // or just let it inherit the opacity from the main, and let children stagger.
-        // For this setup, the children's stagger from main is sufficient.
       >
-        {/* Background glow effect */}
         <motion.div
           className="absolute -inset-8 rounded-3xl blur-3xl bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 dark:from-purple-500 dark:via-pink-500 dark:to-indigo-500 opacity-20"
-          variants={glowVariants} // Apply glow variants
+          variants={glowVariants}
           initial="hidden"
           animate="show"
         />
 
-        {/* Main Title */}
         <motion.h1
-          className="text-5xl md:text-7xl font-medium mb-4 relative z-10 text-gray-800 dark:text-white font-heading" // Changed font-bold to font-medium
+          className="text-5xl md:text-7xl font-medium mb-6 relative z-10
+          text-gray-800 dark:text-white font-heading"
           style={{
             textShadow: "0 4px 20px rgba(0,0,0,0.1)",
             transformStyle: "preserve-3d",
@@ -67,8 +63,8 @@ export default function Home() {
             <motion.span
               key={i}
               className="inline-block mr-2 cursor-default"
-              variants={titleWordVariants} // Apply word variants
-              whileHover="hover" // Apply hover animation
+              variants={titleWordVariants}
+              whileHover="hover"
               style={{
                 transformOrigin: "center bottom",
               }}
@@ -78,17 +74,15 @@ export default function Home() {
           ))}
         </motion.h1>
 
-        {/* Description paragraph */}
         <motion.p
-          className="text-xl md:text-2xl font-bold font-body max-w-2xl mx-auto leading-relaxed text-gray-600 dark:text-gray-300" // Changed font-medium to font-bold
-          variants={paragraphVariants} // Apply paragraph variants
+          className="text-xl md:text-2xl font-bold font-body max-w-2xl mx-auto
+          leading-relaxed text-gray-600 dark:text-gray-300"
+          variants={paragraphVariants}
         >
-          Building a legacy of excellence through visionary leadership and
-          sustainable progress. Empowering communities, fostering innovation,
-          and creating lasting impact for future generations.
+          {t("home.description")}
         </motion.p>
 
-        {/* Decorative floating elements (from original page.js, kept for visual effect) */}
+        {/* Decorative elements remain unchanged */}
         <motion.div
           className="absolute -top-10 -right-10 w-20 h-20 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 dark:from-purple-600 dark:to-pink-600 opacity-20 blur-xl"
           animate={{
@@ -116,7 +110,6 @@ export default function Home() {
         />
       </motion.div>
 
-      {/* Subtle grid pattern overlay */}
       <div
         className="absolute inset-0 opacity-5 bg-black dark:bg-white"
         style={{

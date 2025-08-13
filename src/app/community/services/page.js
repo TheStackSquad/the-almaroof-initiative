@@ -1,6 +1,7 @@
 // src/app/community/services/page.js
 
 "use client";
+
 import Link from "next/link";
 import LocalServices from "@/components/community/localServices";
 import { useFadeIn } from "@/animation/aboutAnimate";

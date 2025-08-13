@@ -1,0 +1,43 @@
+{
+  "home": {
+    "title": "Ìgbìmọ̀ Almaroof: Àṣáájú, Ìdàgbàsókè, àti Àgbègbè",
+    "description": "Iyasile tó peregèdè nípasẹ̀ ìṣàkóso tó lójú ìran àti ìtẹ̀síwájú tó dúró pẹ́. Mú agbára àwọn àgbègbè pọ̀ sí i, gbé àwọn ìmọ̀ ìṣẹ̀dá ga, àti ṣíṣe àwọn ipa tí yóò wà títí ayérayé fún àwọn ìran tó ń bọ̀."
+  },
+  "trendingNews": [
+    {
+      "title": "Alága Ìjọba Ìbílẹ̀ Oshodi-Isolo ṣí Ọ̀nà Tuntun àti Àwọn Àgbá Títí Omi sílẹ̀",
+      "category": "Ìdàgbàsókè Àgbègbè",
+      "readTime": "3 min",
+      "trend": "✨ Àwọn Àròkọ Agbègbè",
+      "image": "/img/road.jpg"
+    },
+    {
+      "title": "Àwọn Òṣìṣẹ́ Ọjà Oshodi Kéde Lodi sí Àwọn Òfin Ìlànà Mímọ́ Tuntun",
+      "category": "Iṣẹ́ Ìṣòwò Agbègbè",
+      "readTime": "5 min",
+      "trend": "⚠️ Kókó Ọ̀rọ̀ Tí Ó Gbona",
+      "image": "/img/market.jpg"
+    },
+    {
+      "title": "Àwọn Ẹgbẹ́ Àgùnmọ́lẹ̀ Kòyígbò Béèrè fún Ìgbéraga Ìṣọ́ Ààbò ní Mafoluku",
+      "category": "Ààbò",
+      "readTime": "4 min",
+      "trend": "🚨 Àwọn Ìdààmú Tí Ó Ń Gbé Lókè",
+      "image": "/img/watch.webp"
+    },
+    {
+      "title": "Àwọn Ọ̀dọ́ ní Oshodi kópa nínú Ètò Ìdánilẹ́kọ̀ọ́ Àkànlò Àwọn Ìmọ̀ Ọpọ́n Ìṣẹ́",
+      "category": "Ìlọ́wọ́sí Àwọn Èèyàn",
+      "readTime": "6 min",
+      "trend": "💪 Àwọn Ìgbésẹ̀ Tí Ó Ń Lọ",
+      "image": "/img/vocational-1.jpg"
+    },
+    {
+      "title": "Ìrànlọ́wọ́ sí Àwọn Àgbàlagbà ní Oshodi Pèsè Oúnjẹ",
+      "category": "Ìmọ̀ Ìjìnlẹ̀",
+      "readTime": "2 min",
+      "trend": "❤️ Ìwàníhùwà Tí Ó Ń Tàn Káàkiri",
+      "image": "/img/food.jpg"
+    }
+  ]
+}

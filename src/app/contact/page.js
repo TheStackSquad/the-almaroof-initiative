@@ -7,6 +7,7 @@ import QuickContacts from "../../components/contact/quickContacts";
 import ContactFilter from "../../components/contact/contactFilter";
 import ContactGrid from "../../components/contact/contactGrid";
 import ContactSection from "../../components/contact/contactSection";
+import FAQAccordion from "../../components/contact/faqAccordion"; 
 import {
   contactData,
   contactCategories,
@@ -285,6 +286,8 @@ const ContactPage = () => {
             </div>
           </div>
         </div>
+
+        <FAQAccordion />
 
         {/* Quick Contacts Section */}
         <QuickContacts quickContacts={quickContacts} />

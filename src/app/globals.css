@@ -64,10 +64,11 @@
     font-display: swap;
   }
 }
-
+/* 
  body {
      font-family: 'Roboto', sans-serif;
-   }
+      @apply bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200;
+   } */
 
    h1, h2, h3, h4, h5, h6 {
      font-family: 'Montserrat', sans-serif;

@@ -179,3 +179,86 @@ export const mockBusinesses = [
     dateAdded: "2024-02-05",
   },
 ];
+
+export const emergencyServices = [
+  {
+    id: "makinde-police",
+    name: "Makinde Police Division",
+    category: "Emergency Services",
+    priority: 1,
+    contact: {
+      phone: "+234-803-123-4567",
+      email: "makinde.police@lagosstate.gov.ng"
+    },
+    address: "Makinde Street, Mafoluku, Oshodi, Lagos",
+    coordinates: { lat: 6.5244, lng: 3.3792 },
+    hours: "24/7",
+    status: "Available",
+    description: "Full-service police station handling criminal matters, complaints, and emergency response.",
+    onlineServices: ["Report Crime Online", "Police Report Request"],
+    processingTime: "Immediate for emergencies",
+    //    requirements: "Valid ID for visits, incident details for reports",
+    fees: "Free for emergencies",
+    hasOnlineOption: true
+  },
+  {
+    id: "akinpelu-police",
+    name: "Akinpelu Police Division",
+    category: "Emergency Services",
+    priority: 1,
+    contact: {
+      phone: "+234-803-123-4568",
+      email: "akinpelu.police@lagosstate.gov.ng"
+    },
+    address: "Akinpelu Street, Bolade, Oshodi-Isolo",
+    coordinates: { lat: 6.5150, lng: 3.3420 },
+    hours: "24/7",
+    status: "Available",
+    description: "Community policing and crime prevention services.",
+    onlineServices: ["Report Crime Online", "Police Report Request"],
+    processingTime: "Immediate for emergencies",
+    // requirements: "Valid ID, incident details",
+    fees: "Free for emergencies",
+    hasOnlineOption: true
+  },
+  {
+    id: "mosafejo-police",
+    name: "Mosafejo Police Division",
+    category: "Emergency Services",
+    priority: 1,
+    contact: {
+      phone: "+234-803-123-4569",
+      email: "mosafejo.police@lagosstate.gov.ng"
+    },
+    address: "Mosafejo Street, beside LASTMA Office, Oshodi-Isolo, Lagos",
+    coordinates: { lat: 6.5300, lng: 3.3500 },
+    hours: "24/7",
+    status: "Available",
+    description: "Traffic and general police services.",
+    onlineServices: ["Traffic Report", "Police Report Request"],
+    processingTime: "Immediate for emergencies",
+    // requirements: "Valid ID",
+    fees: "Free for emergencies",
+    hasOnlineOption: true
+  },
+  {
+    id: "shogunle-police",
+    name: "Shogunle Police Division",
+    category: "Emergency Services",
+    priority: 1,
+    contact: {
+      phone: "+234-803-123-4570",
+      email: "shogunle.police@lagosstate.gov.ng"
+    },
+    address: "Shogunle Street, by Oshodi Bus Stop, Oshodi-Isolo, Lagos",
+    coordinates: { lat: 6.5280, lng: 3.3450 },
+    hours: "24/7",
+    status: "Available",
+    description: "General police services and community safety.",
+    onlineServices: ["Report Crime Online", "Police Report Request"],
+    processingTime: "Immediate for emergencies",
+    // requirements: "Valid ID",
+    fees: "Free for emergencies",
+    hasOnlineOption: true
+  }
+];
