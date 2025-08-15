@@ -106,70 +106,62 @@ const UserForm = ({ redirectUrl }) => {
     }
   };
 
-   const handleSubmit = async (e) => {
-     e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-     if (!validateForm()) {
-       showToast("Please fix the errors in the form", "error");
-       return;
-     }
+  if (!validateForm()) {
+    showToast("Please fix the errors in the form", "error");
+    return;
+  }
 
-     setIsLoading(true);
+  setIsLoading(true);
 
-     try {
-       if (isSignUp) {
-         // Handle signup
-         const signupData = {
-           username: formData.username,
-           email: formData.email,
-           phone: formData.phone,
-           password: formData.password,
-         };
+  try {
+    if (isSignUp) {
+      // Handle signup
+      const signupData = {
+        username: formData.username,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+      };
 
-         // await dispatch(requestPasscode(signupData)); // Old code
-         await dispatch(signupUser(signupData)); // New code
+      await dispatch(signupUser(signupData));
+      showToast("Account created successfully!", "success");
 
-         showToast(
-           "Account created successfully! Redirecting to sign in...",
-           "success"
-         );
+      // Switch to sign in after successful signup
+      setIsSignUp(false);
+      setFormData((prev) => ({
+        ...prev,
+        username: "",
+        phone: "",
+        confirmPassword: "",
+      }));
+    } else {
+      // Handle signin
+      const signinData = {
+        email: formData.email,
+        password: formData.password,
+      };
 
-         // Switch to sign in after successful signup
-         setTimeout(() => {
-           setIsSignUp(false);
-           setFormData((prev) => ({
-             ...prev,
-             username: "",
-             phone: "",
-             confirmPassword: "",
-           }));
-         }, 1500);
-       } else {
-         // Handle signin
-         const signinData = {
-           email: formData.email,
-           password: formData.password,
-         };
+      await dispatch(signinUser(signinData));
+      showToast("Signed in successfully!", "success");
 
-         await dispatch(signinUser(signinData));
-         showToast("Signed in successfully!", "success");
-
-         // Redirect to intended page
-         setTimeout(() => {
-           router.push(redirectUrl);
-         }, 1000);
-       }
-     } catch (error) {
-       console.error("Auth error:", error);
-       showToast(
-         error.message ||
-           `${isSignUp ? "Sign up" : "Sign in"} failed. Please try again.`,
-         "error"
-       );
-     } finally {
-       setIsLoading(false);
-     }
-   };
+      // Redirect to intended page
+      router.push(redirectUrl);
+    }
+  } catch (error) {
+    console.error("Auth error:", error);
+    const defaultMessage = `${
+      isSignUp ? "Sign up" : "Sign in"
+    } failed. Please try again.`;
+    const errorMessage =
+      error.response?.data?.message || error.message || defaultMessage;
+    showToast(errorMessage, "error");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const toggleAuthMode = () => {
     setIsSignUp(!isSignUp);

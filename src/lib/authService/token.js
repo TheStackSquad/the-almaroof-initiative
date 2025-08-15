@@ -2,7 +2,7 @@
 import { SignJWT } from "jose";
 
 const secretKey =
-  process.env.JWT_SECRET_KEY ||
+  process.env.JWT_SECRET ||
   "your-very-strong-and-secure-default-secret-key-that-is-at-least-256-bits";
 const key = new TextEncoder().encode(secretKey);
 

@@ -1,18 +1,18 @@
 // src/components/community/localServices.js
 
-"use client"; 
+"use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import { useFadeIn } from "@/animation/aboutAnimate";
 import {
   getAllServices,
   getServicesByCategory,
-  getServiceById, // NEW: Import helper function
 } from "@/data/localServicesData";
-import ServiceModal from "@/modal/serviceModal";
+// import ServiceModal from "@/modal/serviceModal";
 import { generateServiceUrl } from "@/utils/route/routeValidator";
+import { generateLoginUrl } from "@/utils/route/routeValidator"; // Import the login URL generator
 
 // Import the new sub-components
 import ServiceCard from "@/components/community/local-services/serviceCards";
@@ -29,14 +29,11 @@ export default function LocalServices() {
     "Administrative Services": false,
   });
   const [selectedService, setSelectedService] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // const [isModalOpen, setIsModalOpen] = useState(false);
 
   const router = useRouter();
-  const authState = useSelector((state) => state.auth);
-  console.log("auth from redux:", authState);
-  const { isAuthenticated, isLoading } = authState;
+  const { isAuthenticated, loading } = useSelector((state) => state.auth);
 
-  // Handle service actions with proper auth check
   const handleServiceAction = (service, actionType) => {
     if (actionType === "details") {
       openServiceModal(service);
@@ -44,44 +41,32 @@ export default function LocalServices() {
     }
 
     if (actionType === "online") {
-      const targetUrl = getServiceUrl(service);
+      // Use the centralized URL generator for the service
+      const targetUrl = generateServiceUrl(service.id);
 
-      // Check if auth state is still loading
-      if (isLoading) {
+      // Check the auth state to decide on the next action
+      if (loading) {
+        // Optionally handle loading state feedback, e.g., show a toast or a disabled state.
         console.log("Auth state loading, please wait...");
         return;
       }
 
       if (!isAuthenticated) {
-        const encodedRedirect = encodeURIComponent(targetUrl);
-        router.push(
-          `/community/online-services/protected-route?redirect=${encodedRedirect}`
-        );
+        // If not authenticated, redirect to the login page with the target URL
+        // The generateLoginUrl utility handles the encoding automatically.
+        const loginUrl = generateLoginUrl(targetUrl);
+        router.push(loginUrl);
       } else {
+        // If authenticated, navigate directly to the service URL
         router.push(targetUrl);
       }
     }
   };
 
-  const getServiceUrl = (service) => {
-    const url = generateServiceUrl(service.id);
-
-    if (!url) {
-      console.warn(`Could not generate URL for service: ${service.id}`);
-      if (service.id === "business-permits") {
-        return "/community/online-services/business-permit/apply/";
-      }
-      return `/community/online-services/${service.id}/${
-        service.primaryAction || "service"
-      }`;
-    }
-    return url;
-  };
-
-  const openServiceModal = (service) => {
-    setSelectedService(service);
-    setIsModalOpen(true);
-  };
+  // const openServiceModal = (service) => {
+  //   setSelectedService(service);
+  //   setIsModalOpen(true);
+  // };
 
   const categories = [
     {
@@ -177,7 +162,7 @@ export default function LocalServices() {
               category={category}
               expandedCategories={expandedCategories}
               setExpandedCategories={setExpandedCategories}
-              openServiceModal={openServiceModal}
+              onServiceAction={handleServiceAction} // Pass the handler down
             />
           ))
         ) : (
@@ -206,11 +191,12 @@ export default function LocalServices() {
         )}
       </div>
 
-      <ServiceModal
+      {/* <ServiceModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         service={selectedService}
-      />
+        onAction={handleServiceAction} // Also pass the handler to the modal
+      /> */}
     </>
   );
 }
