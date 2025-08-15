@@ -5,6 +5,7 @@ import { AUTH_ACTIONS, API_ENDPOINTS, AUTH_ERRORS } from "../lib/constant";
 
 // Configure axios defaults
 const api = axios.create({
+  // The browser will automatically attach the HttpOnly cookie to requests for this base URL.
   baseURL: process.env.NEXT_PUBLIC_API_URL || "",
   timeout: 10000,
   headers: {
@@ -12,27 +13,25 @@ const api = axios.create({
   },
 });
 
-// Add auth token to requests
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("auth_token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
   return config;
 });
 
-// Handle token expiration
+// Handle 401 Unauthorized errors by redirecting the user.
+// The browser will handle clearing the cookie after it expires or on logout.
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // If the server returns a 401, we redirect the user to the login page.
+    // The server is responsible for invalidating the cookie.
     if (error.response?.status === 401) {
-      localStorage.removeItem("auth_token");
-      localStorage.removeItem("user_data");
-      window.location.href = "/request-passcode";
+      window.location.href = "/community/online-services/protected-route";
     }
     return Promise.reject(error);
   }
 );
+
+
 
 /**
  * Traditional Signup Action
@@ -166,31 +165,25 @@ export const checkSession = () => async (dispatch) => {
   dispatch({ type: AUTH_ACTIONS.CHECK_SESSION_REQUEST });
 
   try {
-    const token = localStorage.getItem("auth_token");
-    if (!token) {
-      throw new Error("No authentication token found");
-    }
+    // No need to get the token from localStorage; the browser sends the cookie automatically.
+    // The presence of the cookie is what indicates a potential valid session.
 
+    // Make the API call to verify the session.
     const response = await api.get(API_ENDPOINTS.VERIFY_SESSION);
     const { user } = response.data;
 
-    // Update stored user data
-    localStorage.setItem("user_data", JSON.stringify(user));
-
+    // No need to manually update localStorage. The user data should come from the server.
+    // We just dispatch the success action.
     dispatch({
       type: AUTH_ACTIONS.CHECK_SESSION_SUCCESS,
       payload: {
         user,
-        token,
       },
     });
 
-    return { type: "auth/checkSessionSuccess", user, token };
+    return { type: "auth/checkSessionSuccess", user };
   } catch (error) {
-    // Clear invalid session data
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("user_data");
-
+    // There is no local data to clear. The browser handles the cookie.
     const errorMessage =
       error.response?.data?.message ||
       error.message ||

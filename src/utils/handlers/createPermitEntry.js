@@ -2,19 +2,28 @@
 
 import { supabase } from "../supabase/supaClient";
 
-// Insert new permit record into Supabase
-export const createPermitEntry = async (formData) => {
+/**
+ * Inserts a new permit record into the 'permits' table.
+ * @param {object} formData - The permit form data.
+ * @param {string} userId - The authenticated user's ID from Redux state.
+ * @returns {object} The inserted permit record with its new ID.
+ */
+export const createPermitEntry = async (formData, userId) => {
   const { full_name, email, phone, permit_type } = formData;
 
-  const { data, error } = await supabase.from("permits").insert([
-    {
-      full_name,
-      email,
-      phone,
-      permit_type,
-      status: "pending", // default at entry point
-    },
-  ]);
+  const { data, error } = await supabase
+    .from("permits")
+    .insert([
+      {
+        full_name,
+        email,
+        phone,
+        permit_type,
+        user_id: userId,
+        status: "pending",
+      },
+    ])
+    .select(); // Use select() to return the newly inserted data
 
   if (error) {
     console.error("Failed to create permit entry:", error.message);

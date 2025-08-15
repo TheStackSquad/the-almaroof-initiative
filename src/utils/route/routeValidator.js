@@ -7,9 +7,7 @@ import {
   isValidRoute,
 } from "@/config/serviceRoutes";
 
-/**
- * Validates and processes route parameters
- */
+
 export class RouteValidator {
   constructor(params = []) {
     this.params = params;
@@ -141,7 +139,7 @@ export class RouteValidator {
 
     Object.entries(serviceRoutes).forEach(([serviceId, serviceConfig]) => {
       Object.keys(serviceConfig.actions).forEach((actionId) => {
-        routes.push(`/community/online-services/${serviceId}/${actionId}`);
+        routes.push(`/community/${serviceId}/${actionId}`);
       });
     });
 
@@ -149,21 +147,15 @@ export class RouteValidator {
   }
 }
 
-/**
- * Quick validation function for use in components
- */
 export const validateServiceRoute = (serviceId, actionId) => {
   return RouteValidator.validateRoute([serviceId, actionId]);
 };
 
-/**
- * Generate URL helper function
- */
 export const generateServiceUrl = (serviceId, actionId = null) => {
   return RouteValidator.generateServiceUrl(serviceId, actionId);
 };
-// export const generateLoginUrl = (targetUrl) => {
-//   return `/community/online-services/protected-route?redirect=${encodeURIComponent(
-//     targetUrl
-//   )}`;
-// };
+export const generateLoginUrl = (targetUrl) => {
+  return `/community/online-services/protected-route?redirect=${encodeURIComponent(
+    targetUrl
+  )}`;
+};

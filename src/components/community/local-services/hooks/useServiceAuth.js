@@ -11,9 +11,8 @@ import { RouteValidator } from "@/utils/route/routeValidator";
 export const useServiceAuth = () => {
   const router = useRouter();
   const dispatch = useDispatch();
-  const [authLoading, setAuthLoading] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false); // Get all necessary auth state from Redux
 
-  // Get all necessary auth state from Redux
   const {
     isAuthenticated,
     isLoading,
@@ -21,9 +20,8 @@ export const useServiceAuth = () => {
     sessionChecked,
     sessionError,
     token,
-  } = useSelector((state) => state.auth);
+  } = useSelector((state) => state.auth); // Debug logging
 
-  // Debug logging
   useEffect(() => {
     console.log("🔍 Auth State Update:", {
       isAuthenticated,
@@ -40,17 +38,15 @@ export const useServiceAuth = () => {
     sessionChecked,
     sessionError,
     token,
-  ]);
+  ]); // Modern auth check with beautiful loading state
 
-  // Modern auth check with beautiful loading state
   const handleAuthenticatedAction = async (service, actionType) => {
     console.log("🚀 handleAuthenticatedAction called:", {
       actionType,
       isAuthenticated,
       sessionChecked,
-    });
+    }); // Show beautiful loading overlay
 
-    // Show beautiful loading overlay
     setAuthLoading(true);
 
     try {
@@ -58,12 +54,8 @@ export const useServiceAuth = () => {
       if (!sessionChecked && !isSessionChecking) {
         console.log("📡 Dispatching checkSession...");
         await dispatch(checkSession());
-      }
+      } // The artificial delay has been removed to improve actual performance. // After the check, proceed with the auth state
 
-      // Small delay for smooth UX (prevents flash)
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      // After the delay, check auth state
       if (isAuthenticated) {
         console.log("✅ User authenticated, proceeding to service");
         handleDirectAction(service, actionType);
@@ -89,9 +81,8 @@ export const useServiceAuth = () => {
     } finally {
       setAuthLoading(false);
     }
-  };
+  }; // Direct action for authenticated users
 
-  // Direct action for authenticated users
   const handleDirectAction = (service, actionType) => {
     console.log("🎯 handleDirectAction:", { actionType });
 
@@ -105,9 +96,8 @@ export const useServiceAuth = () => {
       console.log("🌐 Navigating to:", targetUrl);
       router.push(targetUrl);
     }
-  };
+  }; // Handle clicks with auth check
 
-  // Handle clicks with auth check
   const handleServiceClick = (service, actionType, onAction) => {
     console.log("👆 Service clicked:", { service: service.name, actionType });
 

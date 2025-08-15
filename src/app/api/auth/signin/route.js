@@ -1,11 +1,5 @@
 // src/app/api/auth/signin/route.js
 
-/**
- * @file This file is the API route handler for user sign-in. It
- * orchestrates the entire sign-in flow, including validation,
- * brute-force protection, password verification, token generation,
- * and database updates.
- */
 
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs"; // Assuming you have bcryptjs installed for password hashing
@@ -13,10 +7,10 @@ import { supabaseAdmin } from "@/utils/supabase/supabaseAdmin";
 import { generateAuthToken } from "@/lib/authService/token";
 import { validateSigninData } from "@/middleware/validate";
 import { handleFailedAttempts } from "@/middleware/rate/handleFailedAttempts";
+import { cookies } from "next/headers";
 
 // Set a threshold for password comparison timing to prevent timing attacks
 const BCRYPT_SALT_ROUNDS = 10;
-
 
 export async function POST(request) {
   try {
@@ -99,11 +93,19 @@ export async function POST(request) {
     const token = await generateAuthToken(user);
     const userData = { ...user, is_verified: true }; // Update local user object for the response
 
-    // 8. Return a successful response
+    // 8. Set the token in a secure HttpOnly cookie (AWAITED)
+    const cookieStore = cookies();
+    cookieStore.set("auth_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+    });
+
+    // 9. Return a successful response without the token in the body
     return NextResponse.json(
       {
         message: "Signed in successfully!",
-        token,
         user: userData,
       },
       { status: 200 } // OK

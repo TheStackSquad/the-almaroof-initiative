@@ -216,32 +216,32 @@ const authReducer = (state = AUTH_INITIAL_STATE, action) => {
       };
 
     // Legacy Support
-    case AUTH_ACTIONS.REQUEST_PASSCODE_REQUEST:
-      return {
-        ...state,
-        isLoading: true,
-        error: null,
-      };
+    // case AUTH_ACTIONS.REQUEST_PASSCODE_REQUEST:
+    //   return {
+    //     ...state,
+    //     isLoading: true,
+    //     error: null,
+    //   };
 
-    case AUTH_ACTIONS.REQUEST_PASSCODE_SUCCESS:
-      return {
-        ...state,
-        isLoading: false,
-        error: null,
-        user: action.payload.user,
-        token: action.payload.token,
-        isAuthenticated: !!action.payload.token,
-      };
+    // case AUTH_ACTIONS.REQUEST_PASSCODE_SUCCESS:
+    //   return {
+    //     ...state,
+    //     isLoading: false,
+    //     error: null,
+    //     user: action.payload.user,
+    //     token: action.payload.token,
+    //     isAuthenticated: !!action.payload.token,
+    //   };
 
-    case AUTH_ACTIONS.REQUEST_PASSCODE_FAILURE:
-      return {
-        ...state,
-        isLoading: false,
-        error: action.payload,
-        isAuthenticated: false,
-        user: null,
-        token: null,
-      };
+    // case AUTH_ACTIONS.REQUEST_PASSCODE_FAILURE:
+    //   return {
+    //     ...state,
+    //     isLoading: false,
+    //     error: action.payload,
+    //     isAuthenticated: false,
+    //     user: null,
+    //     token: null,
+    //   };
 
     // Utility Actions
     case AUTH_ACTIONS.CLEAR_AUTH_ERRORS:
