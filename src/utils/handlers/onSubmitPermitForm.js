@@ -1,22 +1,54 @@
 // src/utils/handlers/onSubmitPermitForm.js
 import { createPermitEntry } from "./createPermitEntry";
+import { initiatePaystackPayment } from "./paystackHandler";
 
-
-// src/utils/handlers/onSubmitPermitForm.js
-export const onSubmitPermitForm = async (formData) => {
+export const onSubmitPermitForm = async (formData, userId) => {
   try {
-    console.log("Submitting form data to backend handler:", formData);
-    const { success, data, error } = await createPermitEntry(formData);
-
-    if (!success) {
-      console.error("Backend handler failed to create entry:", error);
-      return { success: false, error: error || "Submission failed" };
+    if (!userId) {
+      return { success: false, error: "User ID is required" };
     }
 
-    console.log("Backend handler succeeded. Returning data:", data);
-    return { success: true, data };
-  } catch (err) {
-    console.error("Permit submission error caught in handler:", err);
-    return { success: false, error: "Unexpected error occurred" };
+    if (!formData || typeof formData !== "object") {
+      return { success: false, error: "Invalid form data" };
+    }
+
+    // Create permit entry
+    const permitResult = await createPermitEntry(formData, userId);
+    if (!permitResult.success) {
+      return { success: false, error: permitResult.error };
+    }
+
+    // Initiate payment
+    const paymentResult = await initiatePaystackPayment({
+      email: formData.email,
+      amount: formData.amount,
+      reference: permitResult.data.reference,
+      metadata: {
+        permit_id: permitResult.data.id,
+        permit_type: formData.permit_type,
+        application_type: formData.application_type,
+      },
+    });
+
+    if (!paymentResult.success) {
+      console.error("Payment initialization failed:", paymentResult.error);
+      // Permit created but payment failed - you may want to handle this differently
+      return {
+        success: true,
+        data: permitResult.data,
+        warning: "Application submitted but payment initialization failed",
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        ...permitResult.data,
+        payment_url: paymentResult.authorization_url,
+      },
+    };
+  } catch (error) {
+    console.error("Unexpected error in onSubmitPermitForm:", error);
+    return { success: false, error: "An unexpected error occurred" };
   }
 };

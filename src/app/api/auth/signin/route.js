@@ -1,5 +1,6 @@
 // src/app/api/auth/signin/route.js
 
+export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs"; // Assuming you have bcryptjs installed for password hashing
