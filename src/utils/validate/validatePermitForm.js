@@ -1,60 +1,55 @@
 // src/utils/validate/validatePermitForm.js
+import { getPermitFee } from "@/config/permitFees";
 
-// export default function validatePermitForm(formData) {
-//   const errors = {};
-
-//   if (!formData.full_name || formData.full_name.trim() === "") {
-//     errors.full_name = "Full name is required";
-//   }
-
-//   if (
-//     !formData.email ||
-//     !/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(formData.email)
-//   ) {
-//     errors.email = "Valid email is required";
-//   }
-
-//   if (!formData.phone || !/^\d{10,15}$/.test(formData.phone)) {
-//     errors.phone = "Valid phone number is required";
-//   }
-
-//   if (!formData.permit_type || formData.permit_type !== "business-permit") {
-//     errors.permit_type = "Permit type must be 'business-permit'";
-//   }
-
-//   return errors;
-// }
-
-
-// src/utils/validate/validatePermitForm.js
 export default function validatePermitForm(formData) {
   const errors = {};
-  console.log("Running validation for form data:", formData);
 
-  if (!formData.full_name || formData.full_name.trim() === "") {
+  // Required field validation
+  if (!formData.full_name?.trim()) {
     errors.full_name = "Full name is required";
+  } else if (formData.full_name.trim().length < 2) {
+    errors.full_name = "Full name must be at least 2 characters";
   }
 
-  if (
-    !formData.email ||
-    !/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(formData.email)
-  ) {
-    errors.email = "Valid email is required";
+  // Email validation
+  if (!formData.email?.trim()) {
+    errors.email = "Email is required";
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    errors.email = "Please enter a valid email address";
   }
 
-  if (!formData.phone || !/^\d{10,15}$/.test(formData.phone)) {
-    errors.phone = "Valid phone number is required";
+  // Phone validation
+  if (!formData.phone?.trim()) {
+    errors.phone = "Phone number is required";
+  } else if (!/^[\d\s\-\+\(\)]{10,}$/.test(formData.phone.replace(/\s/g, ""))) {
+    errors.phone = "Please enter a valid phone number";
   }
 
-  if (!formData.permit_type || formData.permit_type !== "business-permit") {
-    errors.permit_type = "Permit type must be 'business-permit'";
+  // Permit type validation
+  if (!formData.permit_type) {
+    errors.permit_type = "Permit type is required";
   }
 
-  // Log the final results before returning
-  if (Object.keys(errors).length > 0) {
-    console.log("Validation errors found:", errors);
-  } else {
-    console.log("No validation errors found. Form is valid.");
+  // Application type validation
+  if (!formData.application_type) {
+    errors.application_type = "Application type is required";
+  }
+
+  // Amount validation
+  if (!formData.amount || formData.amount <= 0) {
+    errors.amount = "Amount is required";
+  } else if (formData.permit_type && formData.application_type) {
+    const expectedAmount = getPermitFee(
+      formData.permit_type,
+      formData.application_type
+    );
+    if (parseInt(formData.amount) !== expectedAmount) {
+      errors.amount = `Incorrect amount. Expected ${(
+        expectedAmount / 100
+      ).toLocaleString()} for ${
+        formData.application_type
+      } ${formData.permit_type.replace("-", " ")}`;
+    }
   }
 
   return errors;

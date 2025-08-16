@@ -133,9 +133,13 @@ const authReducer = (state = AUTH_INITIAL_STATE, action) => {
         isSessionChecking: false,
         sessionError: null,
         user: action.payload.user,
-        token: action.payload.token,
+        authProvider:
+          action.payload.authProvider || state.authProvider || "traditional",
+        lastLoginAt: action.payload.lastLoginAt || state.lastLoginAt,
         isAuthenticated: true,
         sessionChecked: true,
+        // Preserve existing token if not provided
+        token: action.payload.token || state.token,
       };
 
     case AUTH_ACTIONS.CHECK_SESSION_FAILURE:

@@ -1,34 +1,62 @@
 // src/utils/handlers/createPermitEntry.js
+import { supabase } from "@/utils/supabase/supaClient";
 
-import { supabase } from "../supabase/supaClient";
-
-/**
- * Inserts a new permit record into the 'permits' table.
- * @param {object} formData - The permit form data.
- * @param {string} userId - The authenticated user's ID from Redux state.
- * @returns {object} The inserted permit record with its new ID.
- */
 export const createPermitEntry = async (formData, userId) => {
-  const { full_name, email, phone, permit_type } = formData;
+  try {
+    const requiredFields = [
+      "full_name",
+      "email",
+      "phone",
+      "permit_type",
+      "application_type",
+      "amount",
+    ];
+    const missingFields = requiredFields.filter((field) => !formData[field]);
 
-  const { data, error } = await supabase
-    .from("permits")
-    .insert([
-      {
-        full_name,
-        email,
-        phone,
-        permit_type,
-        user_id: userId,
-        status: "pending",
-      },
-    ])
-    .select(); // Use select() to return the newly inserted data
+    if (missingFields.length > 0) {
+      return {
+        success: false,
+        error: `Missing required fields: ${missingFields.join(", ")}`,
+      };
+    }
 
-  if (error) {
-    console.error("Failed to create permit entry:", error.message);
-    throw new Error("An error occurred while submitting your application.");
+    const { full_name, email, phone, permit_type, application_type, amount } =
+      formData;
+
+    const { data, error } = await supabase
+      .from("permits")
+      .insert([
+        {
+          full_name,
+          email,
+          phone,
+          permit_type,
+          application_type,
+          amount: amount / 100, // Convert from kobo to naira for storage
+          user_id: userId,
+          status: "pending",
+        },
+      ])
+      .select("*")
+      .single();
+
+    if (error) {
+      console.error("Database error creating permit:", error);
+      return {
+        success: false,
+        error: `Database error: ${error.message}`,
+      };
+    }
+
+    return {
+      success: true,
+      data: data,
+    };
+  } catch (error) {
+    console.error("createPermitEntry error:", error);
+    return {
+      success: false,
+      error: error.message || "Failed to create permit entry",
+    };
   }
-
-  return data?.[0]; // return the inserted permit record
 };

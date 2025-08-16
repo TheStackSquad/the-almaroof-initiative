@@ -161,40 +161,50 @@ export const authenticateWithGoogle = (googleData) => async (dispatch) => {
 /**
  * Check Session Action
  */
-export const checkSession = () => async (dispatch) => {
+export const checkSession = () => async (dispatch, getState) => {
   dispatch({ type: AUTH_ACTIONS.CHECK_SESSION_REQUEST });
 
   try {
-    // No need to get the token from localStorage; the browser sends the cookie automatically.
-    // The presence of the cookie is what indicates a potential valid session.
+    console.log("🔍 Checking session...");
 
-    // Make the API call to verify the session.
+    // Make the API call to verify the session
     const response = await api.get(API_ENDPOINTS.VERIFY_SESSION);
-    const { user } = response.data;
+    const { user, authProvider, lastLoginAt } = response.data;
 
-    // No need to manually update localStorage. The user data should come from the server.
-    // We just dispatch the success action.
+    console.log("✅ Session check successful:", { user, authProvider });
+
+    // Dispatch success with complete data
     dispatch({
       type: AUTH_ACTIONS.CHECK_SESSION_SUCCESS,
       payload: {
         user,
+        authProvider,
+        lastLoginAt,
       },
     });
 
-    return { type: "auth/checkSessionSuccess", user };
+    return {
+      type: "auth/checkSessionSuccess",
+      user,
+      authProvider,
+      success: true,
+    };
   } catch (error) {
-    // There is no local data to clear. The browser handles the cookie.
+    console.error("❌ Session check failed:", error);
+
     const errorMessage =
-      error.response?.data?.message ||
-      error.message ||
-      AUTH_ERRORS.SESSION_EXPIRED;
+      error.response?.data?.message || error.message || "Session expired";
 
     dispatch({
       type: AUTH_ACTIONS.CHECK_SESSION_FAILURE,
       payload: errorMessage,
     });
 
-    return { type: "auth/checkSessionFailure", error: errorMessage };
+    return {
+      type: "auth/checkSessionFailure",
+      error: errorMessage,
+      success: false,
+    };
   }
 };
 

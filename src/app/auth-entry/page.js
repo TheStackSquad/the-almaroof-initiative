@@ -15,7 +15,7 @@ function AuthEntryPageContent() {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useSelector((state) => state.auth);
   const redirectUrl =
-    searchParams.get("redirect") || "/community/online-services";
+    searchParams.get("redirect") || "/community/online-services/business-permit/apply";
 
   // Handle redirect if already authenticated
   useEffect(() => {

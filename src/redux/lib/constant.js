@@ -63,6 +63,11 @@ export const AUTH_INITIAL_STATE = {
   user: null,
   token: null,
   isAuthenticated: false,
+  authProvider: null,
+  lastLoginAt: null,
+  loading: false,
+  sessionChecked: false,
+  error: null,
 
   // Loading States
   isLoading: false,
@@ -113,3 +118,49 @@ export const AUTH_SUCCESS = {
   LOGOUT: "Logged out successfully.",
   PROFILE_UPDATED: "Profile updated successfully.",
 };
+
+// authSelectors.js
+export const selectUser = (state) => state.auth.user;
+
+export const selectIsAuthenticated = (state) => {
+  const user = state.auth.user;
+  return !!(user && (user.email || user.id || user.userId));
+};
+
+export const selectAuthLoading = (state) => 
+  state.auth.loading || state.auth.isSessionChecking || false;
+
+export const selectUserId = (state) => {
+  const user = state.auth.user;
+  return user?.id || user?.userId || null;
+};
+
+export const selectUserEmail = (state) => state.auth.user?.email || null;
+
+export const selectUserPhone = (state) => state.auth.user?.phone || null;
+
+export const selectUserName = (state) => 
+  state.auth.user?.username || 
+  state.auth.user?.full_name || 
+  state.auth.user?.name || null;
+
+export const selectIsVerified = (state) => 
+  state.auth.user?.is_verified || state.auth.user?.isVerified || false;
+
+export const selectAuthProvider = (state) => 
+  state.auth.authProvider || state.auth.user?.authProvider || 'traditional';
+
+export const selectSessionChecked = (state) => 
+  state.auth.sessionChecked || false;
+
+// Compound selectors for better UX
+export const selectAuthState = (state) => ({
+  user: selectUser(state),
+  isAuthenticated: selectIsAuthenticated(state),
+  loading: selectAuthLoading(state),
+  userId: selectUserId(state),
+  email: selectUserEmail(state),
+  username: selectUserName(state),
+  isVerified: selectIsVerified(state),
+  sessionChecked: selectSessionChecked(state)
+});
