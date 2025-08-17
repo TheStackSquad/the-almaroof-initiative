@@ -1,5 +1,7 @@
 //src/animation/aboutAnimate.js
 
+'use client';
+
 import { useEffect, useRef, useState } from "react";
 
 // Custom hook for fade-in animation

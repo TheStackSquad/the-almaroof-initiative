@@ -1,9 +1,8 @@
 // src/components/contact/QuickContacts.js
-
-// src/components/contact/QuickContacts.js
+'use client';
 
 import React from "react";
-import { useStaggerAnimation } from "../../animation/aboutAnimate";
+import { useStaggerAnimation } from "@/animation/aboutAnimate";
 
 const QuickContacts = ({ quickContacts }) => {
   const [ref, visibleItems] = useStaggerAnimation(
@@ -31,7 +30,8 @@ const QuickContacts = ({ quickContacts }) => {
   };
 
   return (
-    <section className="mb-8 mt-5">
+    <section
+      className="mb-8 mt-5">
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
           Quick Contacts

@@ -5,7 +5,7 @@ import { useState } from "react";
 import NewsHero from "../../components/news/newsHero";
 import NewsCategories from "../../components/news/newsCategories";
 import NewsTrending from "../../components/news/newsTrending";
-import NewsGrid from "../../components/news/newsGrid";
+// import NewsGrid from "../../components/news/newsGrid";
 import NewsNewsletter from "../../components/news/newsLetter";
 
 export default function NewsPage() {
@@ -34,7 +34,7 @@ export default function NewsPage() {
       <NewsTrending />
 
       {/* News Grid Section */}
-      <NewsGrid articles={articles} />
+      {/* <NewsGrid articles={articles} /> */}
 
       {/* Newsletter Section */}
       <NewsNewsletter />
