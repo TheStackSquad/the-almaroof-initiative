@@ -114,7 +114,7 @@ export default function LeadershipTeam() {
                   {/* Avatar Placeholder - now with the image */}
                   <div
                     className={`w-20 h-20 rounded-full mx-auto -mt-20 mb-4 
-                                flex items-center justify-center shadow-lg relative z-30 overflow-hidden border-4 border-white`}
+  flex items-center justify-center shadow-lg relative z-30 overflow-hidden border-4 border-white`}
                   >
                     {member.image ? (
                       <Image
@@ -122,7 +122,7 @@ export default function LeadershipTeam() {
                         alt={member.name}
                         width={80}
                         height={80}
-                        objectFit="cover"
+                        style={{ objectFit: "cover", borderRadius: "50%" }}
                       />
                     ) : (
                       <span className="text-2xl text-white">{member.icon}</span>

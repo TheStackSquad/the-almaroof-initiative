@@ -2,7 +2,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useTranslation } from "react-i18next";
 import {
   containerVariants,
   titleWordVariants,
@@ -11,10 +10,10 @@ import {
   particleVariants,
 } from "@/animation/animate";
 import AnimatedText from "@/components/common/animatedText";
+import pageData from "@/data/pageData";
 
 export default function Home() {
-  const { t } = useTranslation();
-  const title = t("home.title");
+  const { title, description } = pageData.home;
 
   return (
     <motion.main
@@ -44,7 +43,7 @@ export default function Home() {
       </div>
 
       <motion.div
-        className="max-w-4xl mx-auto text-center relative z-20" // <-- Changed from z-10 to z-20
+        className="max-w-4xl mx-auto text-center relative z-20"
         style={{ perspective: "1000px" }}
       >
         <motion.div
@@ -55,7 +54,7 @@ export default function Home() {
         />
 
         <motion.h1
-          className="mt-9 text-5xl md:text-7xl font-medium mb-6 relative z-10
+          className="mt-11 text-5xl md:text-7xl font-medium mb-6 relative z-10
           text-gray-800 dark:text-white font-heading"
           style={{
             textShadow: "0 4px 20px rgba(0,0,0,0.1)",
@@ -77,13 +76,13 @@ export default function Home() {
           ))}
         </motion.h1>
 
-        <motion.p
+        {/* LCP Fix: This element is no longer animated to ensure immediate rendering */}
+        <p
           className="mb-3 text-xl md:text-2xl font-bold font-body max-w-2xl mx-auto
           leading-relaxed text-gray-600 dark:text-gray-300"
-          variants={paragraphVariants}
         >
-          {t("home.description")}
-        </motion.p>
+          {description}
+        </p>
 
         {/* Decorative elements remain unchanged */}
         <motion.div
@@ -113,13 +112,12 @@ export default function Home() {
         />
       </motion.div>
 
-      {/* Closen the gap and increase the z-index */}
-      <div className="mt-2 md:mt-4 relative z-20 w-[95%] sm:w-[85%] md:w-3/4 lg:w-2/3 xl:w-1/2 mx-auto">
+      <div className="mt-5 md:mt-4 relative z-20 w-[95%] sm:w-[85%] md:w-3/4 lg:w-2/3 xl:w-1/2 mx-auto">
         <AnimatedText />
       </div>
 
       <div
-        className="absolute inset-0 opacity-5 bg-black dark:bg-white z-0" // <-- Added z-0 to the overlay
+        className="absolute inset-0 opacity-5 bg-black dark:bg-white z-0"
         style={{
           backgroundImage: `
             radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0),
