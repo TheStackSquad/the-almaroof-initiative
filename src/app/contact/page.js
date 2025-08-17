@@ -1,7 +1,7 @@
 //src/app/contact/page.js
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import ContactHeader from "../../components/contact/contactHeader";
 import QuickContacts from "../../components/contact/quickContacts";
 import ContactFilter from "../../components/contact/contactFilter";
@@ -71,6 +71,22 @@ const ContactPage = () => {
   const handleSearchChange = (term) => {
     setSearchTerm(term);
   };
+
+  useEffect(() => {
+    if (window.location.hash) {
+      const id = window.location.hash.replace("#", "");
+      const element = document.getElementById(id);
+      if (element) {
+        // Small timeout to ensure DOM is fully rendered
+        setTimeout(() => {
+          element.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }, 100);
+      }
+    }
+  }, []); // Empty dependency array to run only once on mount
 
   return (
     <div

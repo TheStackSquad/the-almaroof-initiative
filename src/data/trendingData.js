@@ -1,5 +1,3 @@
-// src/data/trendingData.js
-
 const trendingNews = [
   {
     id: 1,
@@ -7,7 +5,7 @@ const trendingNews = [
     category: "Community Development",
     readTime: "3 min",
     trend: "✨ Local Buzz",
-    image: "/img/road.jpg",
+    image: "/img/road.webp", // Corrected extension from .jpg to .webp
   },
   {
     id: 2,
@@ -15,7 +13,7 @@ const trendingNews = [
     category: "Local Business",
     readTime: "5 min",
     trend: "⚠️ Hot Topic",
-    image: "/img/market.jpg",
+    image: "/img/market.webp", // Corrected extension from .jpg to .webp
   },
   {
     id: 3,
@@ -24,7 +22,7 @@ const trendingNews = [
     category: "Security",
     readTime: "4 min",
     trend: "🚨 Rising Concerns",
-    image: "/img/watch.webp",
+    image: "/img/watch.webp", // This path was already correct
   },
   {
     id: 4,
@@ -32,7 +30,7 @@ const trendingNews = [
     category: "Empowerment",
     readTime: "6 min",
     trend: "💪 Making Moves",
-    image: "/img/vocational-1.jpg",
+    image: "/img/vocational-1.webp", // Corrected extension from .jpg to .webp
   },
   {
     id: 5,
@@ -40,7 +38,7 @@ const trendingNews = [
     category: "Social",
     readTime: "2 min",
     trend: "❤️ Viral Kindness",
-    image: "/img/food.jpg",
+    image: "/img/food.webp", // Corrected extension from .jpg to .webp
   },
 ];
 

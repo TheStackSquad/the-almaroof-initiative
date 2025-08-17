@@ -1,11 +1,29 @@
 //src/components/contact/ContactCard.js
 import React, { useState } from "react";
-import { useFadeIn } from "../../animation/aboutAnimate";
+import { useFadeIn } from "@/animation/aboutAnimate";
 import Image from "next/image";
 
-const ContactCard = ({ contact, delay = 0 }) => {
+const ContactCard = ({
+  contact,
+  delay = 0,
+  isExpanded = null, // For future auto-close functionality
+  onToggleExpand = null, // For future auto-close functionality
+}) => {
   const [ref, isVisible] = useFadeIn(delay);
-  const [showDetails, setShowDetails] = useState(false);
+
+  // Use local state if parent doesn't control expansion, otherwise use parent state
+  const [localShowDetails, setLocalShowDetails] = useState(false);
+  const showDetails = isExpanded !== null ? isExpanded : localShowDetails;
+
+  const handleToggleDetails = () => {
+    if (onToggleExpand) {
+      // Parent controls the state
+      onToggleExpand(contact.id || contact.name);
+    } else {
+      // Local state control
+      setLocalShowDetails(!localShowDetails);
+    }
+  };
 
   const handleCall = () => {
     window.location.href = `tel:${contact.phone}`;
@@ -27,43 +45,84 @@ const ContactCard = ({ contact, delay = 0 }) => {
       }}
     >
       {/* Header */}
-      <div className="relative bg-gradient-to-br from-blue-600 to-indigo-700 dark:from-blue-800 dark:to-indigo-900 p-6 text-white transition-colors duration-300 flex items-center gap-4">
-        {/* Image */}
-        {contact.image && (
-          <div className="flex-shrink-0">
-            <Image
-              src={contact.image}
-              alt={`Profile picture of ${contact.name}`}
-              width={80}
-              height={80}
-              className="rounded-full border-2 border-white/50 shadow-md object-cover"
-            />
+      <div className="relative bg-gradient-to-br from-blue-600 to-indigo-700 dark:from-blue-800 dark:to-indigo-900 text-white transition-colors duration-300">
+        {/* Mobile Layout - Stacked */}
+        <div className="sm:hidden p-4 space-y-3">
+          {/* Image and Basic Info */}
+          <div className="flex items-center gap-4">
+            {contact.image && (
+              <div className="flex-shrink-0">
+                <Image
+                  src={contact.image}
+                  alt={`Profile picture of ${contact.name}`}
+                  width={64}
+                  height={64}
+                  className="rounded-full border-2 border-white/50 shadow-md object-cover"
+                />
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <h3 className="text-lg font-bold leading-tight">
+                {contact.name}
+              </h3>
+              <p className="text-blue-100 dark:text-blue-200 text-sm leading-tight">
+                {contact.position}
+              </p>
+            </div>
           </div>
-        )}
 
-        {/* Text Content */}
-        <div>
-          <h3 className="text-xl font-bold">{contact.name}</h3>
-          <p className="text-blue-100 dark:text-blue-200 mt-1">
-            {contact.position}
-          </p>
+          {/* Ward Badge - Mobile */}
+          {contact.ward && (
+            <div className="flex justify-center">
+              <span className="bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-medium">
+                Ward {contact.ward}
+              </span>
+            </div>
+          )}
         </div>
 
-        {contact.ward && (
-          <span className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-medium">
-            Ward {contact.ward}
-          </span>
-        )}
+        {/* Desktop/Tablet Layout - Side by side */}
+        <div className="hidden sm:flex items-center gap-4 sm:gap-6 p-4 sm:p-6">
+          {/* Image */}
+          {contact.image && (
+            <div className="flex-shrink-0">
+              <Image
+                src={contact.image}
+                alt={`Profile picture of ${contact.name}`}
+                width={80}
+                height={80}
+                className="rounded-full border-2 border-white/50 shadow-md object-cover"
+              />
+            </div>
+          )}
+
+          {/* Text Content */}
+          <div className="min-w-0 flex-1">
+            <h3 className="text-xl font-bold leading-tight">{contact.name}</h3>
+            <p className="text-blue-100 dark:text-blue-200 mt-1 leading-tight">
+              {contact.position}
+            </p>
+          </div>
+
+          {/* Ward Badge - Desktop */}
+          {contact.ward && (
+            <div className="flex-shrink-0">
+              <span className="bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap">
+                Ward {contact.ward}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Main Content */}
-      <div className="p-6">
-        <div className="space-y-4">
+      <div className="p-4 sm:p-6">
+        <div className="space-y-4 sm:space-y-5">
           {/* Department */}
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/50 rounded-lg flex items-center justify-center transition-colors duration-300">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 bg-blue-100 dark:bg-blue-900/50 rounded-lg flex items-center justify-center transition-colors duration-300 flex-shrink-0">
               <svg
-                className="w-4 h-4 text-blue-600 dark:text-blue-300 transition-colors duration-300"
+                className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-300 transition-colors duration-300"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -76,16 +135,16 @@ const ContactCard = ({ contact, delay = 0 }) => {
                 />
               </svg>
             </div>
-            <span className="text-gray-700 dark:text-gray-200 font-medium transition-colors duration-300">
+            <span className="text-gray-700 dark:text-gray-200 font-medium transition-colors duration-300 text-sm sm:text-base">
               {contact.department}
             </span>
           </div>
 
           {/* Call + Email Buttons */}
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={handleCall}
-              className="flex-1 bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white py-2 px-4 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition-all duration-200"
+              className="flex-1 bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white py-3 sm:py-2.5 px-4 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition-all duration-200 hover:shadow-md active:scale-[0.98]"
             >
               <svg
                 className="w-4 h-4"
@@ -104,7 +163,7 @@ const ContactCard = ({ contact, delay = 0 }) => {
             </button>
             <button
               onClick={handleEmail}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white py-2 px-4 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition-all duration-200"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white py-3 sm:py-2.5 px-4 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition-all duration-200 hover:shadow-md active:scale-[0.98]"
             >
               <svg
                 className="w-4 h-4"
@@ -125,8 +184,8 @@ const ContactCard = ({ contact, delay = 0 }) => {
 
           {/* Show Details Button */}
           <button
-            onClick={() => setShowDetails(!showDetails)}
-            className="w-full text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium text-sm flex items-center justify-center gap-2 py-2 border-t border-gray-100 dark:border-neutral-700 mt-4 pt-4 transition-colors duration-200"
+            onClick={handleToggleDetails}
+            className="w-full text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium text-sm flex items-center justify-center gap-2 py-3 border-t border-gray-100 dark:border-neutral-700 mt-5 pt-5 transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-neutral-800/50 rounded-lg"
           >
             {showDetails ? "Hide Details" : "Show Details"}
             <svg
@@ -149,16 +208,16 @@ const ContactCard = ({ contact, delay = 0 }) => {
 
         {/* Expandable Section */}
         <div
-          className={`transition-all duration-300 ease-out overflow-hidden ${
-            showDetails ? "max-h-96 opacity-100 mt-4" : "max-h-0 opacity-0"
+          className={`transition-all duration-500 ease-out overflow-hidden ${
+            showDetails ? "max-h-[500px] opacity-100 mt-5" : "max-h-0 opacity-0"
           }`}
         >
-          <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-neutral-700">
+          <div className="space-y-4 sm:space-y-5 pt-5 border-t border-gray-100 dark:border-neutral-700">
             {/* Phone */}
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 bg-gray-100 dark:bg-neutral-800 rounded-lg flex items-center justify-center mt-0.5 transition-colors duration-300">
+            <div className="flex items-start gap-3 sm:gap-4">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-100 dark:bg-neutral-800 rounded-lg flex items-center justify-center mt-0.5 transition-colors duration-300 flex-shrink-0">
                 <svg
-                  className="w-3 h-3 text-gray-600 dark:text-gray-300"
+                  className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-600 dark:text-gray-300"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -171,8 +230,8 @@ const ContactCard = ({ contact, delay = 0 }) => {
                   />
                 </svg>
               </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors duration-300">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 transition-colors duration-300 mb-1">
                   Phone
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-300">
@@ -182,10 +241,10 @@ const ContactCard = ({ contact, delay = 0 }) => {
             </div>
 
             {/* Email */}
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 bg-gray-100 dark:bg-neutral-800 rounded-lg flex items-center justify-center mt-0.5 transition-colors duration-300">
+            <div className="flex items-start gap-3 sm:gap-4">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-100 dark:bg-neutral-800 rounded-lg flex items-center justify-center mt-0.5 transition-colors duration-300 flex-shrink-0">
                 <svg
-                  className="w-3 h-3 text-gray-600 dark:text-gray-300"
+                  className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-600 dark:text-gray-300"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -198,21 +257,21 @@ const ContactCard = ({ contact, delay = 0 }) => {
                   />
                 </svg>
               </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors duration-300">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 transition-colors duration-300 mb-1">
                   Email
                 </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400 break-all transition-colors duration-300">
+                <p className="text-sm text-gray-600 dark:text-gray-400 break-words transition-colors duration-300">
                   {contact.email}
                 </p>
               </div>
             </div>
 
             {/* Address */}
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 bg-gray-100 dark:bg-neutral-800 rounded-lg flex items-center justify-center mt-0.5 transition-colors duration-300">
+            <div className="flex items-start gap-3 sm:gap-4">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-100 dark:bg-neutral-800 rounded-lg flex items-center justify-center mt-0.5 transition-colors duration-300 flex-shrink-0">
                 <svg
-                  className="w-3 h-3 text-gray-600 dark:text-gray-300"
+                  className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-600 dark:text-gray-300"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -231,11 +290,11 @@ const ContactCard = ({ contact, delay = 0 }) => {
                   />
                 </svg>
               </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors duration-300">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 transition-colors duration-300 mb-1">
                   Address
                 </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-300">
+                <p className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-300 leading-relaxed">
                   {contact.address}
                 </p>
               </div>
@@ -243,8 +302,8 @@ const ContactCard = ({ contact, delay = 0 }) => {
 
             {/* Bio */}
             {contact.bio && (
-              <div className="pt-3 border-t border-gray-100 dark:border-neutral-700 transition-colors duration-300">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-2 transition-colors duration-300">
+              <div className="pt-4 border-t border-gray-100 dark:border-neutral-700 transition-colors duration-300">
+                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3 transition-colors duration-300">
                   About
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed transition-colors duration-300">
