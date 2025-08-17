@@ -1,4 +1,4 @@
-//src/components/about/heroSection.js
+// src/components/about/heroSection.js
 
 "use client";
 
@@ -12,7 +12,7 @@ export default function HeroSection() {
   const [descRef, descStyle] = useSlideIn("up", 600);
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden py-5">
       {/* Background Elements */}
       <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 via-teal-700 to-blue-800"></div>
       <div className="absolute inset-0 bg-black bg-opacity-30"></div>
@@ -26,7 +26,14 @@ export default function HeroSection() {
       </div>
 
       <div className="relative z-10 max-w-6xl mx-auto px-6 text-center">
-        {/* Main Title */}
+        {/* Main Title - LCP Element moved out of animated container */}
+        <h2
+          className="text-4xl md:text-6xl lg:text-7xl font-bold text-emerald-300 mb-2"
+          style={{ fontFamily: "Montserrat, sans-serif" }}
+        >
+          KEHINDE OLOYODE
+        </h2>
+        {/* Animated Titles */}
         <div
           ref={titleRef}
           className={`transition-all duration-1000 ease-out ${
@@ -41,12 +48,6 @@ export default function HeroSection() {
           >
             OTUNBA
           </h1>
-          <h2
-            className="text-4xl md:text-6xl lg:text-7xl font-bold text-emerald-300 mb-2"
-            style={{ fontFamily: "Montserrat, sans-serif" }}
-          >
-            KEHINDE OLOYODE
-          </h2>
           <h3
             className="text-3xl md:text-5xl lg:text-6xl font-bold text-teal-200"
             style={{ fontFamily: "Montserrat, sans-serif" }}
@@ -77,37 +78,31 @@ export default function HeroSection() {
           </p>
         </div>
 
-        {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-          <div>
-            <a href="/projects">
-              <button
-                className="px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-full 
-                     transform hover:scale-105 transition-all duration-300 shadow-2xl hover:shadow-emerald-500/25"
-                style={{ fontFamily: "Montserrat, sans-serif" }}
-              >
-                Learn More About My Vision
-              </button>
-            </a>
-            <a href="/contact">
-              <button
-                className="px-8 py-4 border-2 border-white text-white hover:bg-white hover:text-emerald-800 
-                     font-bold rounded-full transform hover:scale-105 transition-all duration-300"
-                style={{ fontFamily: "Montserrat, sans-serif" }}
-              >
-                Get In Touch
-              </button>
-            </a>
+        {/* CTA Buttons & Scroll Indicator */}
+        <div className="flex flex-col sm:flex-row gap-8 justify-center items-center">
+          <a href="/projects">
+            <button
+              className="px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-full transform hover:scale-105 transition-all duration-300 shadow-2xl hover:shadow-emerald-500/25"
+              style={{ fontFamily: "Montserrat, sans-serif" }}
+            >
+              Learn More About My Vision
+            </button>
+          </a>
+          <div className="w-6 h-10 border-2 border-white rounded-full flex justify-center">
+            <div className="w-1 h-3 bg-white rounded-full animate-pulse"></div>
           </div>
+          <a href="/contact">
+            <button
+              className="px-8 py-4 border-2 border-white text-white hover:bg-white hover:text-emerald-800 font-bold rounded-full transform hover:scale-105 transition-all duration-300"
+              style={{ fontFamily: "Montserrat, sans-serif" }}
+            >
+              Get In Touch
+            </button>
+          </a>
         </div>
       </div>
 
-      {/* Scroll Indicator */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-        <div className="w-6 h-10 border-2 border-white rounded-full flex justify-center">
-          <div className="w-1 h-3 bg-white rounded-full mt-2 animate-pulse"></div>
-        </div>
-      </div>
+      {/* Note: The old scroll indicator has been removed from here */}
     </section>
   );
 }

@@ -37,25 +37,7 @@ export default function BiographySection() {
           {/* Image Section */}
           <div ref={imageRef} style={imageStyle} className="relative">
             <div className="relative overflow-hidden rounded-2xl shadow-2xl transform hover:scale-105 transition-all duration-500">
-              {/* Placeholder for actual image */}
-              {/* <div className="aspect-[4/5] bg-gradient-to-br from-emerald-400 via-teal-500 to-blue-600 flex items-center justify-center">
-                <div className="text-center text-white">
-                  <div className="w-32 h-32 mx-auto mb-4 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
-                    <span
-                      className="text-4xl font-bold"
-                      style={{ fontFamily: "Montserrat, sans-serif" }}
-                    >
-                      KA
-                    </span>
-                  </div>
-                  <p
-                    className="text-lg"
-                    style={{ fontFamily: "Roboto, serif" }}
-                  >
-                    Official Portrait
-                  </p>
-                </div>
-              </div> */}
+         
 
               <Image
                 src="/img/kendoo.webp"
