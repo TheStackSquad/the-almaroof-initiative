@@ -37,39 +37,57 @@ export default function CategorySection({
       <div
         onClick={() => toggleCategory(category.name)}
         className={`
-          flex items-center justify-between p-4 rounded-lg cursor-pointer
+          flex flex-col sm:flex-row items-start sm:items-center justify-between 
+          p-4 sm:p-4 rounded-lg cursor-pointer
           transition-all duration-300 border-l-4
           bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600
           ${categoryColorClasses}
           ${category.alwaysExpanded ? "cursor-default" : ""}
         `}
       >
-        <div className="flex items-center space-x-3">
-          <span className="text-2xl">{category.icon}</span>
-          <h3 className="text-xl font-bold font-montserrat">{category.name}</h3>
-          <span className="px-3 py-1 text-sm font-roboto font-semibold bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded-full">
+        {/* Main content section */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
+          {/* Icon and title row */}
+          <div className="flex items-center space-x-3">
+            <span className="text-2xl">{category.icon}</span>
+            <h3 className="text-lg sm:text-xl font-bold font-montserrat">
+              {category.name}
+            </h3>
+          </div>
+
+          {/* Services count badge */}
+          <span className="px-3 py-1 text-sm font-roboto font-semibold bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded-full ml-8 sm:ml-0">
             {services.length} services
           </span>
         </div>
+
+        {/* Chevron icon - positioned better on mobile */}
         {!category.alwaysExpanded && (
-          <div
-            className={`transform transition-transform duration-300 ${
-              isExpanded ? "rotate-180" : ""
-            }`}
-          >
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                clipRule="evenodd"
-              />
-            </svg>
+          <div className="absolute top-4 right-4 sm:relative sm:top-auto sm:right-auto sm:mt-0">
+            <div
+              className={`transform transition-transform duration-300 ${
+                isExpanded ? "rotate-180" : ""
+              }`}
+            >
+              <svg
+                className="w-5 h-5 sm:w-6 sm:h-6"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
           </div>
         )}
       </div>
 
+      {/* Services grid */}
       {(isExpanded || category.alwaysExpanded) && (
-        <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {services
             .sort((a, b) =>
               a.hasOnlineOption === b.hasOnlineOption

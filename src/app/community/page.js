@@ -1,6 +1,5 @@
 // src/app/community/page.js
 
-// This is a Server Component, no 'use client'
 import { publicInstitutions, wardsData } from "@/data/oshodiData";
 import { localServicesData } from "@/data/localServicesData";
 import CommunityUI from "@/components/community/communityUI";

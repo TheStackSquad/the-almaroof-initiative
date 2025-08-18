@@ -10,7 +10,6 @@ import {
   getAllServices,
   getServicesByCategory,
 } from "@/data/localServicesData";
-// import ServiceModal from "@/modal/serviceModal";
 import { generateServiceUrl } from "@/utils/route/routeValidator";
 import { generateLoginUrl } from "@/utils/route/routeValidator"; // Import the login URL generator
 
@@ -190,13 +189,6 @@ export default function LocalServices() {
           </div>
         )}
       </div>
-
-      {/* <ServiceModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        service={selectedService}
-        onAction={handleServiceAction} // Also pass the handler to the modal
-      /> */}
     </>
   );
 }

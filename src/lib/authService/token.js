@@ -6,6 +6,14 @@ const secretKey =
   "your-very-strong-and-secure-default-secret-key-that-is-at-least-256-bits";
 const key = new TextEncoder().encode(secretKey);
 
+/**
+ * Generates a secure JSON Web Token (JWT) for a user.
+ * The token contains essential, non-sensitive user data to enable
+ * quick authentication checks without a database lookup.
+ *
+ * @param {object} user - The user object from the database.
+ * @returns {Promise<string>} A promise that resolves to the signed JWT.
+ */
 export async function generateAuthToken(user) {
   if (!user || !user.id || !user.email) {
     throw new Error(
@@ -15,15 +23,18 @@ export async function generateAuthToken(user) {
 
   try {
     // Define the token's payload with essential, non-sensitive data
+    // It's crucial to include all necessary data for session checks here.
     const payload = {
       userId: user.id,
       email: user.email,
+      username: user.username, // <-- ADDED: Include the username in the JWT payload
+      phone: user.phone, // <-- ADDED: Include the phone number for consistency
       isVerified: user.is_verified,
       // Add other non-sensitive data as needed
     };
+      console.log("unvieling payload:", payload);
 
-    // Create and sign the JWT
-    // The `jose` library handles all the complexities of token creation securely.
+    // Create and sign the JWT using the jose library
     const jwt = await new SignJWT(payload)
       // Set the protected header with the signing algorithm
       .setProtectedHeader({ alg: "HS256" })
