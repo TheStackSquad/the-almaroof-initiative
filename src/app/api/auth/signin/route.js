@@ -43,6 +43,7 @@ export async function POST(request) {
     }
 
     const user = users;
+    console.log('user from db:', user);
 
     // 3. Brute-Force Protection Check
     const now = new Date();
@@ -93,6 +94,7 @@ export async function POST(request) {
     // 7. Generate a secure JWT
     const token = await generateAuthToken(user);
     const userData = { ...user, is_verified: true }; // Update local user object for the response
+      console.log("unvieling userData:", userData, user);
 
     // 8. Set the token in a secure HttpOnly cookie (AWAITED)
     const cookieStore = cookies();

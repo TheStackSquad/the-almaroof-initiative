@@ -54,7 +54,6 @@ const authReducer = (state = AUTH_INITIAL_STATE, action) => {
       return {
         ...state,
         isSigninLoading: false,
-        isLoading: false,
         signinSuccess: true,
         signinError: null,
         error: null,
@@ -132,14 +131,15 @@ const authReducer = (state = AUTH_INITIAL_STATE, action) => {
         ...state,
         isSessionChecking: false,
         sessionError: null,
-        user: action.payload.user,
+        // The most important change: defensively merge the user data.
+        // This ensures fields like 'username' are not lost if the payload is incomplete.
+        user: { ...state.user, ...action.payload.user },
+        token: action.payload.token || state.token,
         authProvider:
           action.payload.authProvider || state.authProvider || "traditional",
         lastLoginAt: action.payload.lastLoginAt || state.lastLoginAt,
         isAuthenticated: true,
         sessionChecked: true,
-        // Preserve existing token if not provided
-        token: action.payload.token || state.token,
       };
 
     case AUTH_ACTIONS.CHECK_SESSION_FAILURE:
