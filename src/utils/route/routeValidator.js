@@ -4,7 +4,6 @@ import {
   getServiceConfig,
   getActionConfig,
   getPrimaryAction,
-  isValidRoute,
 } from "@/config/serviceRoutes";
 
 
@@ -20,6 +19,11 @@ export class RouteValidator {
    * Validate the current route parameters
    */
   validate() {
+     console.log("RouteValidator received params:", {
+       params: this.params,
+       serviceId: this.serviceId,
+       actionId: this.actionId,
+     });
     const result = {
       isValid: false,
       serviceId: this.serviceId,
@@ -139,7 +143,7 @@ export class RouteValidator {
 
     Object.entries(serviceRoutes).forEach(([serviceId, serviceConfig]) => {
       Object.keys(serviceConfig.actions).forEach((actionId) => {
-        routes.push(`/community/${serviceId}/${actionId}`);
+        routes.push(`/community/online-services/${serviceId}/${actionId}`);
       });
     });
 
@@ -153,9 +157,4 @@ export const validateServiceRoute = (serviceId, actionId) => {
 
 export const generateServiceUrl = (serviceId, actionId = null) => {
   return RouteValidator.generateServiceUrl(serviceId, actionId);
-};
-export const generateLoginUrl = (targetUrl) => {
-  return `/community/online-services/protected-route?redirect=${encodeURIComponent(
-    targetUrl
-  )}`;
 };

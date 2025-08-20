@@ -1,4 +1,5 @@
 // src/redux/lib/constant.js
+import { createSelector } from '@reduxjs/toolkit';
 
 // Authentication Action Types
 export const AUTH_ACTIONS = {
@@ -119,7 +120,7 @@ export const AUTH_SUCCESS = {
   PROFILE_UPDATED: "Profile updated successfully.",
 };
 
-// authSelectors.js
+// Individual selectors
 export const selectUser = (state) => state.auth.user;
 
 export const selectIsAuthenticated = (state) => {
@@ -153,14 +154,26 @@ export const selectAuthProvider = (state) =>
 export const selectSessionChecked = (state) => 
   state.auth.sessionChecked || false;
 
-// Compound selectors for better UX
-export const selectAuthState = (state) => ({
-  user: selectUser(state),
-  isAuthenticated: selectIsAuthenticated(state),
-  loading: selectAuthLoading(state),
-  userId: selectUserId(state),
-  email: selectUserEmail(state),
-  username: selectUserName(state),
-  isVerified: selectIsVerified(state),
-  sessionChecked: selectSessionChecked(state)
-});
+// FIXED: Memoized compound selector
+export const selectAuthState = createSelector(
+  [
+    selectUser,
+    selectIsAuthenticated,
+    selectAuthLoading,
+    selectUserId,
+    selectUserEmail,
+    selectUserName,
+    selectIsVerified,
+    selectSessionChecked
+  ],
+  (user, isAuthenticated, loading, userId, email, username, isVerified, sessionChecked) => ({
+    user,
+    isAuthenticated,
+    loading,
+    userId,
+    email,
+    username,
+    isVerified,
+    sessionChecked
+  })
+);

@@ -7,8 +7,9 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 export async function GET(request) {
   try {
-    // 1. Get the token from the HttpOnly cookie
-    const tokenCookie = cookies().get("auth_token");
+    // 1. Get the token from the HttpOnly cookie - await cookies() in Next.js 15
+    const cookieStore = await cookies();
+    const tokenCookie = cookieStore.get("auth_token");
 
     if (!tokenCookie) {
       console.log("❌ No auth token cookie found.");
