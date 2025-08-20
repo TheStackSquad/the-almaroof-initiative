@@ -2,9 +2,8 @@
 
 "use client";
 
-import { useSearchParams, useRouter } from "next/navigation";
-import { Suspense, useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import UserForm from "@/components/common/user-login/useForm";
 import SocialLogin from "@/components/common/user-login/socialLogin";
 import { ShieldCheckIcon } from "@heroicons/react/24/outline";
@@ -12,25 +11,9 @@ import { Spinner } from "@nextui-org/react";
 
 function AuthEntryPageContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const { isAuthenticated, isLoading } = useSelector((state) => state.auth);
   const redirectUrl =
-    searchParams.get("redirect") || "/community/online-services/business-permit/apply";
-
-  // Handle redirect if already authenticated
-  useEffect(() => {
-    if (isAuthenticated && !isLoading) {
-      router.push(redirectUrl);
-    }
-  }, [isAuthenticated, isLoading, redirectUrl, router]);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Spinner size="lg" />
-      </div>
-    );
-  }
+    searchParams.get("redirect") ||
+    "/community/online-services/business-permit/apply";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-yellow-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center px-4 py-8">
@@ -84,6 +67,8 @@ function AuthEntryPageContent() {
 
 export default function AuthEntryPage() {
   return (
+    // The Suspense fallback is no longer strictly needed for auth checks,
+    // but it is good practice to keep it for any other asynchronous operations.
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center">

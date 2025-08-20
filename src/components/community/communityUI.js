@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { useFadeIn } from "@/animation/aboutAnimate";
-import ButtonRedirect from "@/components/common/buttonRedirect";
+import ButtonRedirect from "@/components/common/buttons/buttonRedirect";
 
 // Client-only component for global styles
 const GlobalStyles = () => (

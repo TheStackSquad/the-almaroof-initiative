@@ -1,43 +1,51 @@
 // src/utils/handlers/onSubmitPermitForm.js
-import { createPermitEntry } from "./createPermitEntry";
+import { createPermitEntry } from "@/utils/supabase/createPermit";
 import { initiatePaystackPayment } from "./paystackHandler";
 
-export const onSubmitPermitForm = async (formData, userId) => {
+export const onSubmitPermitForm = async (formData, authState) => {
   try {
-    if (!userId) {
-      return { success: false, error: "User ID is required" };
+    console.log("------------------------------------");
+    console.log("Received formData:", formData);
+    console.log("Received authState:", authState);
+
+    if (!authState?.isAuthenticated || !authState.user?.id) {
+      console.log("Authentication failed. authState:", authState);
+      return {
+        success: false,
+        error: "Authentication required",
+        requiresAuth: true,
+      };
     }
 
-    if (!formData || typeof formData !== "object") {
-      return { success: false, error: "Invalid form data" };
-    }
+    console.log("Attempting to create a new permit entry...");
+    const permitResult = await createPermitEntry(formData);
 
-    // Create permit entry
-    const permitResult = await createPermitEntry(formData, userId);
+    console.log("Permit creation result:", permitResult);
+
     if (!permitResult.success) {
-      return { success: false, error: permitResult.error };
-    }
+      return permitResult;
+    } // Generate the reference here after a successful permit entry
 
-    // Initiate payment
-    const paymentResult = await initiatePaystackPayment({
-      email: formData.email,
+    const paymentReference = `permit_${permitResult.data.id}_${Date.now()}`; // Payment handling (using auth-state email if needed)
+
+    const paymentData = {
+      email: authState.user.email || formData.email,
       amount: formData.amount,
-      reference: permitResult.data.reference,
+      reference: paymentReference,
       metadata: {
         permit_id: permitResult.data.id,
+        user_id: authState.user.id,
         permit_type: formData.permit_type,
-        application_type: formData.application_type,
       },
-    });
+    };
+
+    console.log("Initiating payment with data:", paymentData);
+    const paymentResult = await initiatePaystackPayment(paymentData);
+
+    console.log("Paystack payment initiation result:", paymentResult);
 
     if (!paymentResult.success) {
-      console.error("Payment initialization failed:", paymentResult.error);
-      // Permit created but payment failed - you may want to handle this differently
-      return {
-        success: true,
-        data: permitResult.data,
-        warning: "Application submitted but payment initialization failed",
-      };
+      return paymentResult;
     }
 
     return {
@@ -48,7 +56,11 @@ export const onSubmitPermitForm = async (formData, userId) => {
       },
     };
   } catch (error) {
-    console.error("Unexpected error in onSubmitPermitForm:", error);
-    return { success: false, error: "An unexpected error occurred" };
+    console.error("Submission error caught in onSubmitPermitForm:", error);
+    return {
+      success: false,
+      error: error.message,
+      requiresAuth: error.message.includes("auth"),
+    };
   }
 };

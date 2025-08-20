@@ -1,80 +1,85 @@
 // src/app/api/paystack/verify/route.js
 import { NextResponse } from "next/server";
-import { supabase } from "@/utils/supabase/supaClient";
+import { supabaseAdmin } from "@/utils/supabase/supabaseAdmin";
+import crypto from "crypto";
 
-export async function GET(req) {
+const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+
+export async function POST(req) {
   try {
-    const { searchParams } = new URL(req.url);
-    const reference = searchParams.get("reference");
+    const payload = await req.json();
 
-    if (!reference) {
+    // 1. Verify the webhook signature
+    const hash = crypto
+      .createHmac("sha512", PAYSTACK_SECRET_KEY)
+      .update(JSON.stringify(payload))
+      .digest("hex");
+
+    if (hash !== req.headers.get("x-paystack-signature")) {
+      console.error("❌ Webhook signature verification failed.");
       return NextResponse.json(
-        { error: "Payment reference is required" },
-        { status: 400 }
+        { message: "Signature verification failed." },
+        { status: 401 }
       );
     }
 
-    const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
+    // 2. Process the webhook event
+    if (payload.event === "charge.success") {
+      const transactionData = payload.data;
+      const {
+        status,
+        reference,
+        amount,
+        metadata: { permit_id, user_id },
+      } = transactionData;
 
-    // Verify transaction with Paystack
-    const response = await fetch(
-      `https://api.paystack.co/transaction/verify/${reference}`,
-      {
-        headers: {
-          Authorization: `Bearer ${paystackSecret}`,
-        },
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok || !data.status) {
-      return NextResponse.json(
-        { error: "Payment verification failed" },
-        { status: 400 }
+      console.log(
+        `✅ Webhook received for transaction reference: ${reference}`
       );
-    }
+      console.log(
+        `Processing payment for permit_id: ${permit_id} with amount: ${amount}`
+      );
 
-    const { status, amount, customer, metadata } = data.data;
-
-    if (status === "success") {
-      // Update permit status in database
-      const { error: updateError } = await supabase
+      // 3. Update the permit status in your database
+      const { data, error } = await supabaseAdmin
         .from("permits")
-        .update({
-          status: "paid",
-          payment_reference: reference,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("reference", reference);
+        .update({ status: "pending", amount: amount / 100 })
+        .eq("id", permit_id)
+        .eq("user_id", user_id) // Add extra check for security
+        .select()
+        .single();
 
-      if (updateError) {
-        console.error("Error updating permit status:", updateError);
+      if (error) {
+        console.error("🚨 Supabase update failed:", error);
         return NextResponse.json(
-          { error: "Failed to update payment status" },
+          { message: "Database update failed." },
           { status: 500 }
         );
       }
 
+      if (!data) {
+        console.warn(
+          `⚠️ Permit not found or already updated for ID: ${permit_id}`
+        );
+        return NextResponse.json(
+          { message: "Permit not found or updated." },
+          { status: 404 }
+        );
+      }
+
+      console.log(`✅ Permit ID ${permit_id} status updated to 'pending'.`);
       return NextResponse.json({
-        status: "success",
-        message: "Payment verified successfully",
-        data: {
-          reference,
-          amount: amount / 100, // Convert back to naira
-          email: customer.email,
-        },
+        message: "Permit status updated successfully.",
       });
     }
 
-    return NextResponse.json(
-      { error: "Payment was not successful" },
-      { status: 400 }
-    );
+    // 4. Handle other events (e.g., failed, abandoned)
+    console.log(`⚠️ Received Paystack event: ${payload.event}`);
+    return NextResponse.json({ message: "Event received, no action taken." });
   } catch (error) {
-    console.error("Payment verification error:", error);
+    console.error("🚨 Webhook processing error:", error);
     return NextResponse.json(
-      { error: "Internal server error during verification" },
+      { message: "Internal server error." },
       { status: 500 }
     );
   }

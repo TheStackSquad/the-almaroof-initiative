@@ -6,6 +6,7 @@ export const initiatePaystackPayment = async ({
   metadata = {},
 }) => {
   try {
+      const amountInKobo = amount * 100;
     const response = await fetch("/api/paystack/initiate", {
       method: "POST",
       headers: {
@@ -13,7 +14,7 @@ export const initiatePaystackPayment = async ({
       },
       body: JSON.stringify({
         email,
-        amount,
+        amount: amountInKobo,
         reference,
         metadata,
       }),

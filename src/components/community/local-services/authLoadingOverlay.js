@@ -4,10 +4,6 @@
 
 import React from "react";
 
-// The AuthLoadingOverlay component provides a visually appealing and informative
-// loading state while the application is checking the user's session.
-// It is designed to be a full-screen, top-level component that is
-// controlled by the `isSessionChecking` state from Redux.
 const AuthLoadingOverlay = ({ isVisible, serviceName }) => {
   if (!isVisible) return null;
 

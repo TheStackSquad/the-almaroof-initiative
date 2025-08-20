@@ -1,4 +1,5 @@
 // src/components/forms/permitForm.js
+
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
@@ -50,6 +51,8 @@ export default function PermitForm({ permitType = "business-permit" }) {
   const userPhone = useSelector(selectUserPhone);
   const userName = useSelector(selectUserName);
 
+  console.log("auth state:", authState);
+
   // State management
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [submissionResult, setSubmissionResult] = useState(null);
@@ -67,8 +70,8 @@ export default function PermitForm({ permitType = "business-permit" }) {
 
   // Memoized computed values
   const isFormReady = useMemo(
-    () => authState.isAuthenticated && userId && authState.sessionChecked,
-    [authState.isAuthenticated, userId, authState.sessionChecked]
+    () => authState.isAuthenticated && authState.sessionChecked,
+    [authState.isAuthenticated, authState.sessionChecked]
   );
 
   const canSubmit = useMemo(
@@ -151,43 +154,48 @@ export default function PermitForm({ permitType = "business-permit" }) {
       setLoading(true);
 
       try {
-        if (!authState.isAuthenticated || !userId) {
-          showToast("Please sign in to submit your application", "error");
-          if (!authState.loading) {
-            router.push("/auth-entry");
-          }
+        // Form validation...
+
+        const result = await onSubmitPermitForm(formData, authState);
+        console.log("Result received from onSubmitPermitForm:", result);
+
+        if (result.requiresAuth) {
+          router.push("/login");
           return;
         }
-
-        const validationErrors = validatePermitForm(formData);
-        if (Object.keys(validationErrors).length > 0) {
-          setErrors(validationErrors);
-          showToast("Please fix the errors in the form", "error");
-          return;
-        }
-
-        const result = await onSubmitPermitForm(formData, userId);
 
         if (!result.success) {
           setErrors({ submit: result.error });
-          showToast(
-            result.error || "Failed to submit. Please try again.",
-            "error"
-          );
+          showToast(result.error || "Submission failed", "error");
           return;
         }
 
-        setSubmissionResult(result.data);
-        setShowSuccessModal(true);
+        // ------------------------------------
+        // START: RECOMMENDED UPDATE
+        // First, show the success toast
+        showToast("Permit application submitted!", "success");
+
+        // Then, redirect to the payment URL
+        if (result.data?.payment_url) {
+          router.push(result.data.payment_url);
+        } else {
+          // Fallback or a path without payment
+          // You can clear the form here if there's no payment URL
+          setFormData((prevData) => ({
+            ...prevData,
+            permit_type: "",
+            application_type: "",
+          }));
+        }
+        // END: RECOMMENDED UPDATE
+        // ------------------------------------
       } catch (error) {
-        console.error("💥 Unexpected error in form submission:", error);
-        showToast("An unexpected error occurred. Please try again.", "error");
-        setErrors({ submit: "Unexpected error occurred" });
+        // ... (Error handling)
       } finally {
         setLoading(false);
       }
     },
-    [authState, userId, formData, router]
+    [formData, authState, router]
   );
 
   const handleModalClose = useCallback(() => {
@@ -196,11 +204,12 @@ export default function PermitForm({ permitType = "business-permit" }) {
     router.push("/community/online-services");
   }, [router]);
 
-  // Loading states
-  if (authState.loading && !authState.sessionChecked) {
+  // Unified loading and authentication check
+  if (authState.loading || !isFormReady) {
     return <LoadingState type="authentication" />;
   }
 
+  // Fallback if session check completed but user is not authenticated
   if (!authState.isAuthenticated && authState.sessionChecked) {
     return <AuthRequiredState onSignIn={() => router.push("/auth/signin")} />;
   }

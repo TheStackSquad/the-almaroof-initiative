@@ -1,3 +1,4 @@
+//src/app/community/online-services/business-permit/apply/page.js
 "use client";
 
 import React from "react";
@@ -30,12 +31,12 @@ export default function BusinessPermitApplyPage() {
 
   // If authenticated, render the main page content
   return (
-    <main className="min-h-screen py-6 sm:py-10 px-4 mt-7 sm:px-8 bg-gray-50 dark:bg-gray-900 font-roboto">
-      <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 lg:space-y-0 lg:flex lg:gap-8">
-        {/* Left Side: Page Title and User Welcome Info */}
-        <div className="lg:w-1/3 space-y-4 sm:space-y-6">
+    <main className="min-h-screen py-10 px-4 sm:px-8 bg-gray-50 dark:bg-gray-900 font-roboto">
+      <div className="max-w-7xl mx-auto space-y-8 lg:grid lg:grid-cols-3 lg:gap-8">
+        {/* Left Side: Page Title, User Info, and Help Sections */}
+        <div className="lg:col-span-1 space-y-6">
           {/* Page Title & Description */}
-          <div className="text-left mb-4 sm:mb-6">
+          <div className="text-left">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold font-montserrat text-gray-900 dark:text-gray-100 mb-2 leading-tight">
               Apply for Business Permit
             </h1>
@@ -45,9 +46,9 @@ export default function BusinessPermitApplyPage() {
             <div className="w-20 sm:w-24 h-1 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"></div>
           </div>
 
-          {/* Welcome/User Info Card - Mobile Enhanced */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-4 sm:p-6 border-l-4 border-blue-500 dark:border-cyan-500 transition-all duration-300 hover:shadow-xl sm:hover:scale-105">
-            <div className="flex items-center space-x-3 sm:space-x-4">
+          {/* Welcome/User Info Card */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 border-l-4 border-blue-500 dark:border-cyan-500 transition-all duration-300">
+            <div className="flex items-center space-x-4">
               <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center flex-shrink-0">
                 <svg
                   className="w-6 h-6 sm:w-8 sm:h-8 text-white"
@@ -74,8 +75,8 @@ export default function BusinessPermitApplyPage() {
             </div>
           </div>
 
-          {/* Help Section - Mobile Enhanced */}
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl sm:rounded-2xl border-l-4 border-blue-500 dark:border-blue-800 p-4 sm:p-6 shadow-md transition-all duration-300 hover:shadow-lg sm:hover:scale-105">
+          {/* Help Section */}
+          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl border-l-4 border-blue-500 dark:border-blue-800 p-4 sm:p-6 shadow-md transition-all duration-300">
             <div className="flex items-start space-x-3">
               <div className="flex-shrink-0">
                 <svg
@@ -103,7 +104,7 @@ export default function BusinessPermitApplyPage() {
                 <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:gap-2">
                   <a
                     href="#"
-                    className="inline-flex items-center justify-center sm:justify-start text-xs sm:text-sm font-medium text-blue-700 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-200 transition-colors py-2 px-3 sm:py-0 sm:px-0 rounded-md sm:rounded-none bg-blue-100 dark:bg-blue-800/30 sm:bg-transparent"
+                    className="inline-flex items-center justify-center text-xs sm:text-sm font-medium text-blue-700 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-200 transition-colors py-2 px-3 sm:py-0 sm:px-0 rounded-md bg-blue-100 dark:bg-blue-800/30 sm:bg-transparent"
                   >
                     <svg
                       className="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0"
@@ -122,7 +123,7 @@ export default function BusinessPermitApplyPage() {
                   </a>
                   <a
                     href="#"
-                    className="inline-flex items-center justify-center sm:justify-start text-xs sm:text-sm font-medium text-blue-700 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-200 transition-colors py-2 px-3 sm:py-0 sm:px-0 rounded-md sm:rounded-none bg-blue-100 dark:bg-blue-800/30 sm:bg-transparent"
+                    className="inline-flex items-center justify-center text-xs sm:text-sm font-medium text-blue-700 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-200 transition-colors py-2 px-3 sm:py-0 sm:px-0 rounded-md bg-blue-100 dark:bg-blue-800/30 sm:bg-transparent"
                   >
                     <svg
                       className="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0"
@@ -146,15 +147,21 @@ export default function BusinessPermitApplyPage() {
         </div>
 
         {/* Right Side: Main Application Form */}
-        <div className="bg-gradient-to-r from-blue-600 to-cyan-600 px-4 sm:px-6 py-3 sm:py-4 text-left">
-          <h3 className="text-lg sm:text-xl font-semibold font-montserrat text-white leading-tight">
-            Business Permit Application
-          </h3>
-          <p className="text-blue-100 text-xs sm:text-sm mt-1 font-roboto leading-relaxed">
-            Please fill out all required fields accurately.
-          </p>
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8">
+            <div className="bg-gradient-to-r from-blue-600 to-cyan-600 px-4 sm:px-6 py-3 sm:py-4 text-left rounded-t-xl">
+              <h3 className="text-lg sm:text-xl font-semibold font-montserrat text-white leading-tight">
+                Business Permit Application
+              </h3>
+              <p className="text-blue-100 text-xs sm:text-sm mt-1 font-roboto leading-relaxed">
+                Please fill out all required fields accurately.
+              </p>
+            </div>
+            <div className="pt-6 sm:pt-8">
+              <PermitForm />
+            </div>
+          </div>
         </div>
-        <PermitForm />
       </div>
     </main>
   );

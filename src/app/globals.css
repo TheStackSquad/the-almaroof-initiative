@@ -100,3 +100,16 @@
 .animate-pulse {
   animation: pulse 2s infinite;
 }
+
+@keyframes spin-fast {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-fast {
+  animation: spin-fast 0.7s linear infinite;
+}

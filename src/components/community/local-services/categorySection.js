@@ -1,13 +1,12 @@
 // src/components/community/local-services/CategorySection.js
 import React from "react";
 import { getServicesByCategory } from "@/data/localServicesData";
-import ServiceCard from "./serviceCards";
+import ServiceCard from "@/components/community/local-services/serviceCards";
 
 export default function CategorySection({
   category,
   expandedCategories,
   setExpandedCategories,
-  openServiceModal,
 }) {
   const services = getServicesByCategory(category.name);
   const isExpanded = expandedCategories[category.name];
@@ -100,7 +99,6 @@ export default function CategorySection({
               <ServiceCard
                 key={service.id}
                 service={service}
-                openServiceModal={openServiceModal}
               />
             ))}
         </div>

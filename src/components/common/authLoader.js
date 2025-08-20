@@ -1,14 +1,10 @@
 // src/components/common/authLoader.js
 import React from "react";
 
-/**
- * A reusable component to display loading or authentication-required messages.
- * @param {{message: string, type: 'loading' | 'unauthenticated'}} props
- */
 export default function AuthLoader({ message, type = "loading" }) {
-  const isDark =
-    typeof window !== "undefined" &&
-    window.matchMedia("(prefers-color-scheme: dark)").matches;
+  // const isDark =
+  //   typeof window !== "undefined" &&
+  //   window.matchMedia("(prefers-color-scheme: dark)").matches;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">

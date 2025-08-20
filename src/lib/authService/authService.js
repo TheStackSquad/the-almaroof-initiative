@@ -8,19 +8,7 @@ import {
   validateGoogleAuthData,
   sanitizeAuthInput,
 } from "@/utils/validate/authSchemas";
-import { showToast } from "@/components/common/toastAlert/toast";
 
-/**
- * Authentication Service (Redux Integration Version)
- * This service now works with Redux actions instead of direct API calls
- */
-
-/**
- * Traditional signup with email/password (Redux Version)
- * @param {Object} userData - User registration data
- * @param {Function} dispatch - Redux dispatch function
- * @returns {Promise<Object>} - Auth response
- */
 export const signupWithCredentials = async (userData, dispatch) => {
   try {
     // Import Redux action dynamically to avoid circular imports
@@ -56,12 +44,6 @@ export const signupWithCredentials = async (userData, dispatch) => {
   }
 };
 
-/**
- * Traditional signin with email/password (Redux Version)
- * @param {Object} credentials - Login credentials
- * @param {Function} dispatch - Redux dispatch function
- * @returns {Promise<Object>} - Auth response
- */
 export const signinWithCredentials = async (credentials, dispatch) => {
   try {
     // Import Redux action dynamically
@@ -95,12 +77,6 @@ export const signinWithCredentials = async (credentials, dispatch) => {
   }
 };
 
-/**
- * Google OAuth authentication (Redux Version)
- * @param {Object} googleData - Data received from Google
- * @param {Function} dispatch - Redux dispatch function
- * @returns {Promise<Object>} - Auth response
- */
 export const authenticateWithGoogle = async (googleData, dispatch) => {
   try {
     // Import Redux action dynamically
@@ -130,11 +106,6 @@ export const authenticateWithGoogle = async (googleData, dispatch) => {
   }
 };
 
-/**
- * Check if user session is valid (Redux Version)
- * @param {Function} dispatch - Redux dispatch function
- * @returns {Promise<Object>} - Session validation response
- */
 export const checkSession = async (dispatch) => {
   try {
     // Import Redux action dynamically
@@ -160,11 +131,6 @@ export const checkSession = async (dispatch) => {
   }
 };
 
-/**
- * Logout user (Redux Version)
- * @param {Function} dispatch - Redux dispatch function
- * @returns {Promise<Object>} - Logout response
- */
 export const logout = async (dispatch) => {
   try {
     // Import Redux action dynamically
@@ -187,11 +153,6 @@ export const logout = async (dispatch) => {
   }
 };
 
-/**
- * Get current user profile (Redux Version)
- * @param {Function} dispatch - Redux dispatch function
- * @returns {Promise<Object>} - User profile data
- */
 export const getCurrentUser = async (dispatch) => {
   try {
     // Import Redux action dynamically
@@ -209,10 +170,6 @@ export const getCurrentUser = async (dispatch) => {
     throw new Error(error.message || "Failed to fetch user profile");
   }
 };
-
-/**
- * Utility functions (remain the same)
- */
 
 // Check if user is authenticated
 export const isAuthenticated = () => {
