@@ -1,4 +1,4 @@
-// src/components/common/buttons/BackButton.js
+// src/components/common/buttons/backButton.js
 "use client";
 
 import React from "react";
@@ -7,8 +7,9 @@ import Link from "next/link";
 
 export default function BackButton({
   href = null,
-  text = "Back",
+  text = "Back To Services",
   className = "",
+  position = "top-right", // New prop for position
 }) {
   const router = useRouter();
 
@@ -17,35 +18,37 @@ export default function BackButton({
   };
 
   const buttonClass = `
-    flex items-center gap-2 text-blue-600 hover:text-blue-800 
-    transition-colors duration-200 font-medium
+    flex items-center gap-2 text-gray-900 hover:text-blue-800
+    transition-colors duration-200 font-medium mt-12 dark:text-gray-200
     ${className}
   `;
 
-  // If href is provided, use Link for specific navigation
-  if (href) {
-    return (
-      <Link href={href} className={buttonClass}>
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 19l-7-7 7-7"
-          />
-        </svg>
-        {text}
-      </Link>
-    );
+  // Define position-specific classes
+  let positionClass = "";
+  if (position === "top-right") {
+    positionClass = "flex justify-end pr-4 mt-10";
+  } else if (position === "top-left") {
+    positionClass = "flex justify-start pl-4 mt-10";
   }
 
-  // Otherwise use router.back()
-  return (
+  const content = href ? (
+    <Link href={href} className={buttonClass}>
+      <svg
+        className="w-4 h-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M15 19l-7-7 7-7"
+        />
+      </svg>
+      {text}
+    </Link>
+  ) : (
     <button onClick={handleBack} className={buttonClass}>
       <svg
         className="w-4 h-4"
@@ -63,4 +66,6 @@ export default function BackButton({
       {text}
     </button>
   );
+
+  return <div className={positionClass}>{content}</div>;
 }

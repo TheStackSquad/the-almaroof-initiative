@@ -6,8 +6,8 @@ import WaterSewageApply from "@/components/community/service-pages/wasteManageme
 import BackButton from "@/components/common/buttons/backButton";
 export default function WaterSewageApplyPage() {
   return (
-      <div className="min-h-screen bg-white dark:bg-gray-900">
-           <BackButton />
+    <div className="min-h-screen bg-white dark:bg-gray-900">
+      <BackButton />
       <WaterSewageApply />
     </div>
   );
