@@ -66,26 +66,28 @@ const YellowPageDirectory = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    // Add overflow-x-hidden to prevent horizontal scroll on the entire page
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 mt-10 shadow-sm border-b border-gray-200 dark:border-gray-700">
+      {/* Ensure header container is full width and padding is responsive */}
+      <div className="bg-white dark:bg-gray-800 mt-10 shadow-sm border-b border-gray-200 dark:border-gray-700 w-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 dark:text-white font-['Montserrat']">
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white font-['Montserrat']">
                 Oshodi Business Directory
               </h1>
-              <p className="mt-2 text-lg text-gray-600 dark:text-gray-300 font-['Roboto']">
+              <p className="mt-2 text-base sm:text-lg text-gray-600 dark:text-gray-300 font-['Roboto']">
                 Your comprehensive guide to businesses and institutions in
                 Oshodi LGA
               </p>
             </div>
             <button
               onClick={() => setShowRegistrationForm(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-lg hover:shadow-xl"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-lg hover:shadow-xl w-full sm:w-auto justify-center"
             >
               <Plus className="w-5 h-5" />
-              Register Business
+              <span className="whitespace-nowrap">Register Business</span>
             </button>
           </div>
         </div>

@@ -113,3 +113,9 @@
 .animate-spin-fast {
   animation: spin-fast 0.7s linear infinite;
 }
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #1a202c; /* A dark gray that matches Tailwind's default dark mode */
+  }
+}
