@@ -2,21 +2,14 @@
 "use client";
 
 import React from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function BackButton({
-  href = null,
+  href = "/community/services", // Set default path here
   text = "Back To Services",
   className = "",
-  position = "top-right", // New prop for position
+  position = "top-right",
 }) {
-  const router = useRouter();
-
-  const handleBack = () => {
-    router.back();
-  };
-
   const buttonClass = `
     flex items-center gap-2 text-gray-900 hover:text-blue-800
     transition-colors duration-200 font-medium mt-12 dark:text-gray-200
@@ -31,7 +24,7 @@ export default function BackButton({
     positionClass = "flex justify-start pl-4 mt-10";
   }
 
-  const content = href ? (
+  const content = (
     <Link href={href} className={buttonClass}>
       <svg
         className="w-4 h-4"
@@ -48,23 +41,6 @@ export default function BackButton({
       </svg>
       {text}
     </Link>
-  ) : (
-    <button onClick={handleBack} className={buttonClass}>
-      <svg
-        className="w-4 h-4"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M15 19l-7-7 7-7"
-        />
-      </svg>
-      {text}
-    </button>
   );
 
   return <div className={positionClass}>{content}</div>;
