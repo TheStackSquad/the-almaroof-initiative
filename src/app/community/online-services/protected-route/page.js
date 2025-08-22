@@ -8,6 +8,8 @@ import SignInPrompt from "./components/signInPrompt";
 
 // Move the main page logic into a component that uses useSearchParams
 function ProtectedRouteContent() {
+  // All React Hooks must be called at the top level, before any conditional returns.
+  // This ensures they are always called in the same order on every render.
   const router = useRouter();
   const searchParams = useSearchParams();
   const [debugInfo, setDebugInfo] = useState({});
@@ -18,7 +20,45 @@ function ProtectedRouteContent() {
   );
   const isRehydrated = useSelector((state) => state._persist?.rehydrated);
 
-  // Track client-side mounting
+  // Define the utility function at the top level
+  const getRedirectUrl = () => {
+    try {
+      const unsafeRedirectUrl = searchParams?.get("redirect");
+      let finalUrl = "/community/services"; // Default fallback
+
+      console.log("Raw redirect param:", unsafeRedirectUrl);
+
+      if (unsafeRedirectUrl) {
+        // Handle both absolute and relative URLs
+        if (unsafeRedirectUrl.startsWith("/")) {
+          finalUrl = unsafeRedirectUrl;
+        } else {
+          // Use try-catch to safely handle invalid URLs
+          const url = new URL(unsafeRedirectUrl, window.location.origin);
+          if (url.origin === window.location.origin) {
+            finalUrl = url.pathname + url.search + url.hash;
+          } else {
+            console.warn(
+              "Blocked redirect to external domain:",
+              unsafeRedirectUrl
+            );
+          }
+        }
+      }
+
+      console.log("Final redirect URL:", finalUrl);
+      return finalUrl;
+    } catch (e) {
+      console.error("Error processing redirect URL:", e);
+      return "/community/services";
+    }
+  };
+
+  // Calculate the safe URL at the top level
+  const safeRedirectUrl = getRedirectUrl();
+
+  // First useEffect: Track client-side mounting and log debug info.
+  // This is a top-level call.
   useEffect(() => {
     setIsClient(true);
 
@@ -42,55 +82,23 @@ function ProtectedRouteContent() {
     setDebugInfo(debug);
   }, [searchParams, isAuthenticated, isLoading, sessionChecked, isRehydrated]);
 
-  // Extract and validate the redirect URL
-  const getRedirectUrl = () => {
-    try {
-      const unsafeRedirectUrl = searchParams?.get("redirect");
-      let finalUrl = "/community/services"; // Default fallback
-
-      console.log("Raw redirect param:", unsafeRedirectUrl);
-
-      if (unsafeRedirectUrl) {
-        // Handle both absolute and relative URLs
-        if (unsafeRedirectUrl.startsWith("/")) {
-          finalUrl = unsafeRedirectUrl;
-        } else {
-          const url = new URL(unsafeRedirectUrl, window.location.origin);
-          if (url.origin === window.location.origin) {
-            finalUrl = url.pathname + url.search + url.hash;
-          } else {
-            console.warn(
-              "Blocked redirect to external domain:",
-              unsafeRedirectUrl
-            );
-          }
-        }
-      }
-
-      console.log("Final redirect URL:", finalUrl);
-      return finalUrl;
-    } catch (e) {
-      console.error("Error processing redirect URL:", e);
-      return "/community/services";
-    }
-  };
-
-  // Don't render until client-side hydration is complete
-  if (!isClient) {
-    return <GlobalLoader message="Initializing..." />;
-  }
-
-  const safeRedirectUrl = getRedirectUrl();
-
-  // Handle authentication flow
+  // Second useEffect: Handle authentication flow.
+  // This is also a top-level call.
   useEffect(() => {
+    // The conditional logic is now inside the hook, which is correct.
     if (isRehydrated && sessionChecked && isAuthenticated) {
       console.log("User authenticated. Redirecting to:", safeRedirectUrl);
       router.push(safeRedirectUrl);
     }
   }, [isAuthenticated, sessionChecked, isRehydrated, router, safeRedirectUrl]);
 
-  // Show debug info in development
+  // All conditional returns must come after the hooks.
+  // Don't render until client-side hydration is complete
+  if (!isClient) {
+    return <GlobalLoader message="Initializing..." />;
+  }
+
+  // Show debug info only in development
   if (process.env.NODE_ENV === "development") {
     return (
       <div className="p-8 max-w-4xl mx-auto">
