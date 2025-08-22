@@ -97,7 +97,7 @@ export async function POST(request) {
       console.log("unvieling userData:", userData, user);
 
     // 8. Set the token in a secure HttpOnly cookie (AWAITED)
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     cookieStore.set("auth_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
