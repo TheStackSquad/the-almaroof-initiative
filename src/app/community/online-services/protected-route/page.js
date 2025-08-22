@@ -2,14 +2,21 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
 import SignInPrompt from "./components/signInPrompt";
 
 // Move the main page logic into a component that uses useSearchParams
 function ProtectedRouteContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [debugInfo, setDebugInfo] = useState({});
   const [isClient, setIsClient] = useState(false);
+
+  const { isAuthenticated, isLoading, sessionChecked } = useSelector(
+    (state) => state.auth
+  );
+  const isRehydrated = useSelector((state) => state._persist?.rehydrated);
 
   // Track client-side mounting
   useEffect(() => {
@@ -25,11 +32,15 @@ function ProtectedRouteContent() {
           ? navigator.userAgent.includes("Chrome")
           : "server",
       environment: process.env.NODE_ENV,
+      isAuthenticated,
+      isLoading,
+      sessionChecked,
+      isRehydrated,
     };
 
     console.log("Debug info:", debug);
     setDebugInfo(debug);
-  }, [searchParams]);
+  }, [searchParams, isAuthenticated, isLoading, sessionChecked, isRehydrated]);
 
   // Extract and validate the redirect URL
   const getRedirectUrl = () => {
@@ -40,14 +51,19 @@ function ProtectedRouteContent() {
       console.log("Raw redirect param:", unsafeRedirectUrl);
 
       if (unsafeRedirectUrl) {
-        const url = new URL(unsafeRedirectUrl, window.location.origin);
-        if (url.origin === window.location.origin) {
-          finalUrl = url.pathname + url.search + url.hash;
+        // Handle both absolute and relative URLs
+        if (unsafeRedirectUrl.startsWith("/")) {
+          finalUrl = unsafeRedirectUrl;
         } else {
-          console.warn(
-            "Blocked redirect to external domain:",
-            unsafeRedirectUrl
-          );
+          const url = new URL(unsafeRedirectUrl, window.location.origin);
+          if (url.origin === window.location.origin) {
+            finalUrl = url.pathname + url.search + url.hash;
+          } else {
+            console.warn(
+              "Blocked redirect to external domain:",
+              unsafeRedirectUrl
+            );
+          }
         }
       }
 
@@ -66,11 +82,16 @@ function ProtectedRouteContent() {
 
   const safeRedirectUrl = getRedirectUrl();
 
-  // Show debug info in development or when there are issues
-  if (
-    process.env.NODE_ENV === "development" ||
-    process.env.NODE_ENV !== "production"
-  ) {
+  // Handle authentication flow
+  useEffect(() => {
+    if (isRehydrated && sessionChecked && isAuthenticated) {
+      console.log("User authenticated. Redirecting to:", safeRedirectUrl);
+      router.push(safeRedirectUrl);
+    }
+  }, [isAuthenticated, sessionChecked, isRehydrated, router, safeRedirectUrl]);
+
+  // Show debug info in development
+  if (process.env.NODE_ENV === "development") {
     return (
       <div className="p-8 max-w-4xl mx-auto">
         <h2 className="text-2xl font-bold mb-4">Debug Information</h2>
@@ -95,36 +116,20 @@ function ProtectedRouteContent() {
     );
   }
 
-  // All authentication logic is commented out to force rendering the SignInPrompt.
-  // const router = useRouter();
-  // const { isAuthenticated, isLoading, sessionChecked } = useSelector(
-  //   (state) => state.auth
-  // );
-  // const isRehydrated = useSelector((state) => state._persist?.rehydrated);
-  // const [isValidatingUrl, setIsValidatingUrl] = useState(true);
+  // Production flow
+  if (!isRehydrated) {
+    return <GlobalLoader message="Loading application..." />;
+  }
 
-  // useEffect(() => {
-  //   if (isRehydrated && sessionChecked && isAuthenticated) {
-  //     console.log("User authenticated. Redirecting to:", safeRedirectUrl);
-  //     router.push(safeRedirectUrl);
-  //   }
-  // }, [isAuthenticated, sessionChecked, isRehydrated, router, safeRedirectUrl]);
+  if (!sessionChecked || isLoading) {
+    return <GlobalLoader message="Checking your session..." />;
+  }
 
-  // if (!isRehydrated) {
-  //   return <GlobalLoader message="Loading application..." />;
-  // }
+  if (isAuthenticated) {
+    return <GlobalLoader message="Redirecting to service..." />;
+  }
 
-  // if (!sessionChecked || isLoading) {
-  //   return <GlobalLoader message="Checking your session..." />;
-  // }
-
-  // if (!isAuthenticated) {
-  //   return <SignInPrompt redirectUrl={safeRedirectUrl} />;
-  // }
-
-  // return <GlobalLoader message="Redirecting to service..." />;
-
-  // Production rendering - Render the SignInPrompt with the correct redirect URL
+  // User is not authenticated, show sign-in prompt
   return <SignInPrompt redirectUrl={safeRedirectUrl} />;
 }
 
@@ -143,7 +148,6 @@ function GlobalLoader({ message = "Loading..." }) {
 // The main page export now wraps the content in Suspense
 export default function ProtectedRoutePage() {
   return (
-    // This Suspense boundary satisfies Next.js's requirement for useSearchParams
     <Suspense fallback={<GlobalLoader message="Loading secure access..." />}>
       <ProtectedRouteContent />
     </Suspense>
