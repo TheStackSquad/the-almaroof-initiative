@@ -1,29 +1,77 @@
 // src/redux/store/store.js
 
-// src/redux/store/store.js
 import { configureStore } from "@reduxjs/toolkit";
 import { persistStore, persistReducer } from "redux-persist";
-import storage from "redux-persist/lib/storage"; // defaults to localStorage for web
+import createWebStorage from "redux-persist/lib/storage/createWebStorage";
 import rootReducer from "../reducer";
 
-// Persist config
+// Create a noop storage for SSR to prevent "failed to create sync storage" error
+const createNoopStorage = () => {
+  return {
+    getItem() {
+      return Promise.resolve(null);
+    },
+    setItem() {
+      return Promise.resolve();
+    },
+    removeItem() {
+      return Promise.resolve();
+    },
+  };
+};
+
+// Use localStorage on client, noop on server to handle SSR properly
+const storage =
+  typeof window !== "undefined"
+    ? createWebStorage("local")
+    : createNoopStorage();
+
+// Persist config with proper blacklisting to exclude loading states
 const persistConfig = {
   key: "root",
   storage,
-  // Add any reducers you want to persist (or blacklist ones you don't)
   whitelist: ["auth"], // Only persist auth reducer
-  // Optionally add version for migrations
   version: 1,
+  // Transform to exclude loading states from being persisted
+  transforms: [
+    {
+      in: (inboundState) => {
+        // Remove loading states before persisting
+        if (inboundState && inboundState.auth) {
+          const {
+            isLoading,
+            isSessionChecking,
+            isSignupLoading,
+            isSigninLoading,
+            isGoogleAuthLoading,
+            isProfileLoading,
+            ...persistedAuth
+          } = inboundState.auth;
+          return { ...inboundState, auth: persistedAuth };
+        }
+        return inboundState;
+      },
+      out: (outboundState) => outboundState,
+    },
+  ],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 const store = configureStore({
   reducer: persistedReducer,
+  // Add all redux-persist actions to ignored list to prevent serialization warnings
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        ignoredActions: ["persist/PERSIST"], // Ignore redux-persist actions
+        ignoredActions: [
+          "persist/PERSIST",
+          "persist/REHYDRATE",
+          "persist/REGISTER",
+          "persist/PAUSE",
+          "persist/PURGE",
+          "persist/FLUSH",
+        ],
       },
     }),
 });

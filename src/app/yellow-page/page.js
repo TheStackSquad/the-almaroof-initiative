@@ -2,12 +2,18 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Plus, BookOpen, Users, Building2 } from "lucide-react";
-import { mockBusinesses } from "../../data/yellowData";
-import BusinessCard from "../../components/community/yellowPage/businessCard";
-import SearchFilters from "../../components/community/yellowPage/searchFilters";
-import BusinessModal from "../../components/community/yellowPage/businessModal";
-import RegistrationForm from "../../components/community/yellowPage/registrationForm";
+import { mockBusinesses } from "@/data/yellowData";
+
+// Correctly import all necessary components from the directory
+import BusinessCard from "@/components/community/yellowPage/businessCard";
+import SearchFilters from "@/components/community/yellowPage/searchFilters";
+import BusinessModal from "@/components/community/yellowPage/businessModal";
+import RegistrationForm from "@/components/community/yellowPage/registrationForm";
+import BusinessGrid from "@/components/community/yellowPage/businessGrid";
+import StatCards from "@/components/community/yellowPage/statCards";
+import HeaderSection from "@/components/community/yellowPage/headerSection";
+import EmptyResults from "@/components/community/yellowPage/emptyResults";
+import FooterCTA from "@/components/community/yellowPage/footerCTA";
 
 const YellowPageDirectory = () => {
   const [businesses, setBusinesses] = useState(mockBusinesses);
@@ -59,89 +65,19 @@ const YellowPageDirectory = () => {
   };
 
   const handleRegistrationSubmit = (newBusiness) => {
-    // Add new business to the list
     setBusinesses((prev) => [newBusiness, ...prev]);
     console.log("New business registered:", newBusiness);
     // In a real app, this would make an API call
   };
 
   return (
-    // Add overflow-x-hidden to prevent horizontal scroll on the entire page
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
-      {/* Header */}
-      {/* Ensure header container is full width and padding is responsive */}
-      <div className="bg-white dark:bg-gray-800 mt-10 shadow-sm border-b border-gray-200 dark:border-gray-700 w-full">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
-            <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white font-['Montserrat']">
-                Oshodi Business Directory
-              </h1>
-              <p className="mt-2 text-base sm:text-lg text-gray-600 dark:text-gray-300 font-['Roboto']">
-                Your comprehensive guide to businesses and institutions in
-                Oshodi LGA
-              </p>
-            </div>
-            <button
-              onClick={() => setShowRegistrationForm(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-lg hover:shadow-xl w-full sm:w-auto justify-center"
-            >
-              <Plus className="w-5 h-5" />
-              <span className="whitespace-nowrap">Register Business</span>
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Refactored to use the HeaderSection component */}
+      <HeaderSection onRegisterClick={() => setShowRegistrationForm(true)} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-            <div className="flex items-center">
-              <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                <Building2 className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div className="ml-4">
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white font-['Montserrat']">
-                  {stats.total}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300">
-                  Total Businesses
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-            <div className="flex items-center">
-              <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                <Users className="w-8 h-8 text-green-600 dark:text-green-400" />
-              </div>
-              <div className="ml-4">
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white font-['Montserrat']">
-                  {stats.verified}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300">
-                  Verified Businesses
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-            <div className="flex items-center">
-              <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                <BookOpen className="w-8 h-8 text-purple-600 dark:text-purple-400" />
-              </div>
-              <div className="ml-4">
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white font-['Montserrat']">
-                  {stats.categories}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300">Categories</p>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Refactored to use the StatCards component */}
+        <StatCards stats={stats} />
 
         {/* Search and Filters */}
         <SearchFilters
@@ -156,62 +92,27 @@ const YellowPageDirectory = () => {
           resultsCount={filteredBusinesses.length}
         />
 
-        {/* Business Grid */}
+        {/* Business Grid or Empty Results */}
         {filteredBusinesses.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredBusinesses.map((business) => (
-              <BusinessCard
-                key={business.id}
-                business={business}
-                onViewDetails={handleViewDetails}
-              />
-            ))}
-          </div>
+          // Refactored to use the BusinessGrid component
+          <BusinessGrid
+            businesses={filteredBusinesses}
+            onViewDetails={handleViewDetails}
+          />
         ) : (
-          <div className="text-center py-12">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-8 max-w-md mx-auto">
-              <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 font-['Montserrat']">
-                No businesses found
-              </h3>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                No businesses match your current search criteria. Try adjusting
-                your filters or search term.
-              </p>
-              <button
-                onClick={() => {
-                  setSearchTerm("");
-                  setSelectedCategory("");
-                  setSelectedArea("");
-                  setShowVerifiedOnly(false);
-                }}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-              >
-                Clear All Filters
-              </button>
-            </div>
-          </div>
+          // Refactored to use the EmptyResults component
+          <EmptyResults
+            onClearFilters={() => {
+              setSearchTerm("");
+              setSelectedCategory("");
+              setSelectedArea("");
+              setShowVerifiedOnly(false);
+            }}
+          />
         )}
 
-        {/* Footer Info */}
-        <div className="mt-12 text-center">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 font-['Montserrat']">
-              Want to list your business?
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-4 font-['Roboto']">
-              Join our growing directory and connect with customers in Oshodi
-              LGA. Registration is free and easy!
-            </p>
-            <button
-              onClick={() => setShowRegistrationForm(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors inline-flex items-center gap-2"
-            >
-              <Plus className="w-5 h-5" />
-              Register Your Business
-            </button>
-          </div>
-        </div>
+        {/* Refactored to use the FooterCTA component */}
+        <FooterCTA onRegisterClick={() => setShowRegistrationForm(true)} />
       </div>
 
       {/* Business Details Modal */}

@@ -1,159 +1,126 @@
 // src/app/community/online-services/protected-route/page.js
+
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { checkSession } from "@/redux/action/authAction";
 import SignInPrompt from "./components/signInPrompt";
 
-// Move the main page logic into a component that uses useSearchParams
 function ProtectedRouteContent() {
-  // All React Hooks must be called at the top level, before any conditional returns.
-  // This ensures they are always called in the same order on every render.
   const router = useRouter();
+  const dispatch = useDispatch();
   const searchParams = useSearchParams();
-  const [debugInfo, setDebugInfo] = useState({});
-  const [isClient, setIsClient] = useState(false);
 
-  const { isAuthenticated, isLoading, sessionChecked } = useSelector(
-    (state) => state.auth
-  );
+  // Get auth state and rehydration status
+  const authState = useSelector((state) => state.auth);
   const isRehydrated = useSelector((state) => state._persist?.rehydrated);
 
-  // Define the utility function at the top level
+  const { isAuthenticated, sessionChecked, sessionError, isSessionChecking } =
+    authState;
+
+  // Enhanced debugging with cleaner logs
+  useEffect(() => {
+    console.log("🔍 ProtectedRoute State:", {
+      isAuthenticated,
+      sessionChecked,
+      hasSessionError: !!sessionError,
+      isSessionChecking,
+      isRehydrated,
+      timestamp: new Date().toISOString().split("T")[1].split(".")[0], // Show only time
+    });
+  }, [
+    isAuthenticated,
+    sessionChecked,
+    sessionError,
+    isSessionChecking,
+    isRehydrated,
+  ]);
+
+  // Safe redirect URL extraction with fallback
   const getRedirectUrl = () => {
     try {
-      const unsafeRedirectUrl = searchParams?.get("redirect");
-      let finalUrl = "/community/services"; // Default fallback
-
-      console.log("Raw redirect param:", unsafeRedirectUrl);
-
-      if (unsafeRedirectUrl) {
-        // Handle both absolute and relative URLs
-        if (unsafeRedirectUrl.startsWith("/")) {
-          finalUrl = unsafeRedirectUrl;
-        } else {
-          // Use try-catch to safely handle invalid URLs
-          const url = new URL(unsafeRedirectUrl, window.location.origin);
-          if (url.origin === window.location.origin) {
-            finalUrl = url.pathname + url.search + url.hash;
-          } else {
-            console.warn(
-              "Blocked redirect to external domain:",
-              unsafeRedirectUrl
-            );
-          }
-        }
+      const redirectParam = searchParams?.get("redirect");
+      // Only allow relative URLs starting with '/' for security
+      if (redirectParam?.startsWith("/")) {
+        return redirectParam;
       }
-
-      console.log("Final redirect URL:", finalUrl);
-      return finalUrl;
+      return "/community/services";
     } catch (e) {
-      console.error("Error processing redirect URL:", e);
+      console.warn("Error parsing redirect URL:", e);
       return "/community/services";
     }
   };
 
-  // Calculate the safe URL at the top level
   const safeRedirectUrl = getRedirectUrl();
 
-  // First useEffect: Track client-side mounting and log debug info.
-  // This is a top-level call.
+  // Auto-redirect authenticated users to their intended destination
   useEffect(() => {
-    setIsClient(true);
-
-    // Debug information
-    const debug = {
-      hasSearchParams: !!searchParams,
-      redirectParam: searchParams?.get("redirect"),
-      fullUrl: typeof window !== "undefined" ? window.location.href : "server",
-      userAgent:
-        typeof navigator !== "undefined"
-          ? navigator.userAgent.includes("Chrome")
-          : "server",
-      environment: process.env.NODE_ENV,
-      isAuthenticated,
-      isLoading,
-      sessionChecked,
-      isRehydrated,
-    };
-
-    console.log("Debug info:", debug);
-    setDebugInfo(debug);
-  }, [searchParams, isAuthenticated, isLoading, sessionChecked, isRehydrated]);
-
-  // Second useEffect: Handle authentication flow.
-  // This is also a top-level call.
-  useEffect(() => {
-    // The conditional logic is now inside the hook, which is correct.
-    if (isRehydrated && sessionChecked && isAuthenticated) {
-      console.log("User authenticated. Redirecting to:", safeRedirectUrl);
+    if (isAuthenticated && sessionChecked && isRehydrated) {
+      console.log("✅ Authenticated user - redirecting to:", safeRedirectUrl);
       router.push(safeRedirectUrl);
     }
   }, [isAuthenticated, sessionChecked, isRehydrated, router, safeRedirectUrl]);
 
-  // All conditional returns must come after the hooks.
-  // Don't render until client-side hydration is complete
-  if (!isClient) {
-    return <GlobalLoader message="Initializing..." />;
+  // Handle retry for session errors
+  const handleRetry = () => {
+    console.log("🔄 Retrying session check...");
+    dispatch(checkSession());
+  };
+
+  // Determine loading state - simplified logic
+  const isInitializing = !isRehydrated;
+  const isCheckingSession =
+    isSessionChecking || (!sessionChecked && !sessionError);
+
+  // Show loading while initializing or checking session
+  if (isInitializing) {
+    return <GlobalLoader message="Initializing secure access..." />;
   }
 
-  // Show debug info only in development
-  if (process.env.NODE_ENV === "development") {
+  if (isCheckingSession) {
+    return <GlobalLoader message="Verifying authentication..." />;
+  }
+
+  // Handle unauthenticated users or session errors
+  if (!isAuthenticated || sessionError) {
+    console.log("🔐 Showing SignIn:", {
+      isAuthenticated,
+      hasSessionError: !!sessionError,
+    });
+
     return (
-      <div className="p-8 max-w-4xl mx-auto">
-        <h2 className="text-2xl font-bold mb-4">Debug Information</h2>
-        <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded mb-4">
-          <pre className="text-sm overflow-auto">
-            {JSON.stringify(debugInfo, null, 2)}
-          </pre>
-        </div>
-        <div className="mb-4">
-          <p className="font-semibold">
-            Redirect URL:{" "}
-            <span className="font-mono bg-yellow-200 px-2 py-1 rounded">
-              {safeRedirectUrl}
-            </span>
-          </p>
-        </div>
-        <div className="border-t pt-4">
-          <h3 className="text-lg font-semibold mb-2">Component Render:</h3>
-          <SignInPrompt redirectUrl={safeRedirectUrl} />
-        </div>
-      </div>
+      <SignInPrompt
+        redirectUrl={safeRedirectUrl}
+        hasError={!!sessionError}
+        error={sessionError ? { message: sessionError } : null}
+        onRetry={sessionError ? handleRetry : undefined}
+      />
     );
   }
 
-  // Production flow
-  if (!isRehydrated) {
-    return <GlobalLoader message="Loading application..." />;
-  }
-
-  if (!sessionChecked || isLoading) {
-    return <GlobalLoader message="Checking your session..." />;
-  }
-
-  if (isAuthenticated) {
-    return <GlobalLoader message="Redirecting to service..." />;
-  }
-
-  // User is not authenticated, show sign-in prompt
-  return <SignInPrompt redirectUrl={safeRedirectUrl} />;
+  // Authenticated users should have been redirected by the useEffect above
+  // This is a fallback that shows loading while redirect happens
+  console.log("🔄 Authenticated - redirect in progress");
+  return <GlobalLoader message="Redirecting to secure area..." />;
 }
 
-// A simple loading component
+// Consistent loading component with proper styling
 function GlobalLoader({ message = "Loading..." }) {
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="text-center">
         <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-gray-600 dark:text-gray-400 text-sm">{message}</p>
+        <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">
+          {message}
+        </p>
       </div>
     </div>
   );
 }
 
-// The main page export now wraps the content in Suspense
+// Main component with Suspense boundary for useSearchParams
 export default function ProtectedRoutePage() {
   return (
     <Suspense fallback={<GlobalLoader message="Loading secure access..." />}>

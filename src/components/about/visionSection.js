@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { useSlideIn, useFadeIn } from "../../animation/aboutAnimate";
+import { useSlideIn, useFadeIn } from "@/animation/aboutAnimate";
 
 export default function VisionSection() {
   const [sectionRef, sectionStyle] = useSlideIn("up", 0);

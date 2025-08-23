@@ -1,15 +1,15 @@
 // src/components/community/service-pages/WasteManagementSchedule.js
 "use client";
-import { useDispatch } from "react-redux";
+// import { useDispatch } from "react-redux";
 //import { scheduleWasteManagement } from "@/redux/action/wasteManagementAction";
 
 export default function WasteManagementSchedule({
-  serviceId,
-  actionId,
-  serviceConfig,
-  actionConfig,
+  // serviceId,
+  // actionId,
+  // serviceConfig,
+  // actionConfig,
 }) {
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">

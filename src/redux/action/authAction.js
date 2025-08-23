@@ -300,23 +300,6 @@ export const logoutUser = () => async (dispatch) => {
   }
 };
 
-/**
- * Legacy Support - Updated requestPasscode to work with new system
- */
-export const requestPasscode = (authData) => async (dispatch) => {
-  // Determine if this is signup or signin based on data presence
-  const isSignup = authData.username && authData.phone;
-
-  if (isSignup) {
-    return dispatch(signupUser(authData));
-  } else {
-    return dispatch(signinUser(authData));
-  }
-};
-
-/**
- * Utility Actions
- */
 
 // Clear auth errors
 export const clearAuthErrors = () => ({

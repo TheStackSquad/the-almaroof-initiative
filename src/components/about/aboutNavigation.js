@@ -3,7 +3,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { useFadeIn } from "../../animation/aboutAnimate";
+import { useFadeIn } from "@/animation/aboutAnimate";
 
 export default function AboutNavigation({ activeSection, onSectionChange }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);

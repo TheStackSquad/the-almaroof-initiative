@@ -1,15 +1,15 @@
 // src/components/community/service-pages/LandDocumentationVerify.js
 "use client";
-import { useDispatch } from "react-redux";
-import { verifyLandDocumentation } from "@/redux/action/landDocumentationAction";
+// import { useDispatch } from "react-redux";
+// import { verifyLandDocumentation } from "@/redux/action/landDocumentationAction";
 
 export default function LandDocumentationVerify({
-  serviceId,
-  actionId,
-  serviceConfig,
-  actionConfig,
+  // serviceId,
+  // actionId,
+  // serviceConfig,
+  // actionConfig,
 }) {
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">

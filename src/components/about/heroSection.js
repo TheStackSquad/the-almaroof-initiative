@@ -3,8 +3,8 @@
 "use client";
 
 import React from "react";
-import { useFadeIn, useSlideIn } from "../../animation/aboutAnimate";
-import Link from "next/link";
+import { useFadeIn, useSlideIn } from "@/animation/aboutAnimate";
+// import Link from "next/link";
 
 export default function HeroSection() {
   const [titleRef, titleVisible] = useFadeIn(200);
