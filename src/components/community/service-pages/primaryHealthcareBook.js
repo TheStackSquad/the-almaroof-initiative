@@ -1,15 +1,15 @@
 // src/components/community/service-pages/PrimaryHealthcareBook.js
 "use client";
-import { useDispatch } from "react-redux";
+// import { useDispatch } from "react-redux";
 //import { bookPrimaryHealthcareAppointment } from "@/redux/action/primaryHealthcareAction";
 
 export default function PrimaryHealthcareBook({
-  serviceId,
-  actionId,
-  serviceConfig,
-  actionConfig,
+  // serviceId,
+  // actionId,
+  // serviceConfig,
+  // actionConfig,
 }) {
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">

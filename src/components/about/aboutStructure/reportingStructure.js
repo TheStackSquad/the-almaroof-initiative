@@ -15,13 +15,13 @@ export default function ReportingStructure({ organizationStructure }) {
         <div className="text-center mb-8">
           <div className="inline-block bg-emerald-700 dark:bg-emerald-600 text-white rounded-xl p-4 shadow-lg border border-emerald-600 dark:border-emerald-500">
             <div
-              className="font-bold"
+              className="font-bold text-white dark:text-gray-100"
               style={{ fontFamily: "Montserrat, sans-serif" }}
             >
               Executive Chairman
             </div>
             <div
-              className="text-sm opacity-90"
+              className="text-sm opacity-90 text-white dark:text-gray-200"
               style={{ fontFamily: "Roboto, serif" }}
             >
               Otunba Kehinde Almaroof
@@ -35,7 +35,7 @@ export default function ReportingStructure({ organizationStructure }) {
             .map(([key, dept]) => (
               <div
                 key={key}
-                className={`text-center p-4 rounded-lg text-white shadow-md transform hover:scale-105 transition-all duration-300 border ${
+                className={`text-center p-4 rounded-lg text-white dark:text-gray-100 shadow-md transform hover:scale-105 transition-all duration-300 border ${
                   key === "finance"
                     ? "bg-blue-700 dark:bg-blue-600 border-blue-600 dark:border-blue-500"
                     : key === "operations"

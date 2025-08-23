@@ -3,14 +3,14 @@
 "use client";
 
 import React, { useState } from "react";
-import AboutNavigation from "../../components/about/aboutNavigation";
-import HeroSection from "../../components/about/heroSection";
-import BiographySection from "../../components/about/biographySection";
-import Biography from "../../components/about/biography";
-import LeadershipTeam from "../../components/about/leadershipTeam";
-import OfficeStructure from "../../components/about/officeStructure";
-import AchievementsSection from "../../components/about/achievementsSection";
-import VisionSection from "../../components/about/visionSection";
+import AboutNavigation from "@/components/about/aboutNavigation";
+import HeroSection from "@/components/about/heroSection";
+import BiographySection from "@/components/about/biographySection";
+import Biography from "@/components/about/biography";
+import LeadershipTeam from "@/components/about/leadershipTeam";
+import OfficeStructure from "@/components/about/officeStructure";
+import AchievementsSection from "@/components/about/achievementsSection";
+import VisionSection from "@/components/about/visionSection";
 
 export default function AboutPage() {
   const [activeSection, setActiveSection] = useState("overview");

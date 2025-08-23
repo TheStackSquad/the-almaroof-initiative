@@ -1,15 +1,15 @@
 // src/components/community/service-pages/BirthCertificateRegister.js
 "use client";
-import { useDispatch } from "react-redux";
+// import { useDispatch } from "react-redux";
 //import { submitBirthCertificateRegistration } from "@/redux/action/birthCertificateAction";
 
 export default function BirthCertificateRegister({
-  serviceId,
-  actionId,
-  serviceConfig,
-  actionConfig,
+  // serviceId,
+  // actionId,
+  // serviceConfig,
+  // actionConfig,
 }) {
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">

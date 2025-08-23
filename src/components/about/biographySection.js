@@ -3,7 +3,7 @@
 "use client";
 
 import React from "react";
-import { useSlideIn, useFadeIn } from "../../animation/aboutAnimate";
+import { useSlideIn, useFadeIn } from "@/animation/aboutAnimate";
 import Image from "next/image";
 
 export default function BiographySection() {
@@ -35,26 +35,24 @@ export default function BiographySection() {
 
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Image Section */}
-          <div ref={imageRef} style={imageStyle} className="relative">
+          <div ref={imageRef} style={imageStyle} className="relative w-full">
             <div className="relative overflow-hidden rounded-2xl shadow-2xl transform hover:scale-105 transition-all duration-500">
-         
-
-              <Image
-                src="/img/kendoo.webp"
-                alt="Official portrait of Otunba Kehinde Oloyode Almaroof"
-                width={800}
-                height={1000}
-                layout="responsive"
-                objectFit="cover"
-                className="aspect-[4/5]"
-              />
-
+              {/* The parent of the image must have a defined height. */}
+              <div className="relative w-full h-96">
+                {" "}
+                {/* Added w-full and h-96 for a defined size */}
+                <Image
+                  src="/img/kendoo.webp"
+                  alt="Official portrait of Otunba Kehinde Oloyode Almaroof"
+                  fill
+                  className="aspect-[4/5] object-cover"
+                />
+              </div>
               {/* Decorative Elements */}
               <div className="absolute -top-4 -right-4 w-24 h-24 border-4 border-emerald-300 rounded-full opacity-60"></div>
               <div className="absolute -bottom-4 -left-4 w-32 h-32 border-4 border-teal-300 rounded-full opacity-40"></div>
             </div>
           </div>
-
           {/* Content Section */}
           <div ref={contentRef} style={contentStyle} className="space-y-6">
             <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-8 rounded-2xl shadow-lg">

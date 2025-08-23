@@ -7,7 +7,7 @@ import {
   useSlideIn,
   useFadeIn,
   useStaggerAnimation,
-} from "../../animation/aboutAnimate";
+} from "@/animation/aboutAnimate";
 
 export default function AchievementsSection() {
   const [sectionRef, sectionStyle] = useSlideIn("up", 0);

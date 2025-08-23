@@ -18,7 +18,7 @@ export default function OfficeStructure() {
     <div
       ref={sectionRef}
       style={sectionStyle}
-      className="min-h-screen py-20 bg-gradient-to-br from-gray-50 to-white"
+      className="min-h-screen py-20 bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-950"
     >
       <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
@@ -31,19 +31,19 @@ export default function OfficeStructure() {
           }`}
         >
           <h1
-            className="text-4xl md:text-5xl font-bold text-gray-800 mb-4"
+            className="text-4xl md:text-5xl font-bold text-gray-800 dark:text-gray-100 mb-4"
             style={{ fontFamily: "Montserrat, sans-serif" }}
           >
             Office Structure
           </h1>
           <p
-            className="text-xl text-gray-600 max-w-3xl mx-auto mb-6"
+            className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-6"
             style={{ fontFamily: "Roboto, serif" }}
           >
             Organizational framework driving efficient governance and service
             delivery
           </p>
-          <div className="w-24 h-1 bg-emerald-600 mx-auto rounded-full"></div>
+          <div className="w-24 h-1 bg-emerald-600 dark:bg-emerald-400 mx-auto rounded-full"></div>
         </div>
         <div className="grid lg:grid-cols-4 gap-8">
           {/* Department Navigation */}

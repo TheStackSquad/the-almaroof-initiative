@@ -1,15 +1,15 @@
 // src/components/community/service-pages/BusinessPermitApply.js
 "use client";
-import { useDispatch } from "react-redux";
+// import { useDispatch } from "react-redux";
 //import { submitBusinessPermitApplication } from "@/redux/action/businessPermitAction";
 
 export default function BusinessPermitApply({
-  serviceId,
-  actionId,
-  serviceConfig,
-  actionConfig,
+  // serviceId,
+  // actionId,
+  // serviceConfig,
+  // actionConfig,
 }) {
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">

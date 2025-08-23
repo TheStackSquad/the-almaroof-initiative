@@ -7,8 +7,8 @@ import {
   useSlideIn,
   useFadeIn,
   useStaggerAnimation,
-} from "../../animation/aboutAnimate";
-import { leadershipTeam, departments } from "../../data/leadershipData";
+} from "@/animation/aboutAnimate";
+import { leadershipTeam, departments } from "@/data/leadershipData";
 
 export default function LeadershipTeam() {
   const [sectionRef, sectionStyle] = useSlideIn("up", 0);
