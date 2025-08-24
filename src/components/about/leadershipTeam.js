@@ -83,13 +83,18 @@ export default function LeadershipTeam() {
                     className={`absolute inset-0 bg-gradient-to-br ${member.color} opacity-80`}
                   ></div>
                   {member.image && (
-                    <div className="w-full h-full relative">
+                    <div className="w-full h-48 sm:h-56 lg:h-64 relative overflow-hidden">
                       <Image
                         src={member.image}
-                        alt={member.name}
-                        layout="fill"
-                        objectFit="cover"
+                        alt={`${member.name} - ${member.position}`}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        style={{
+                          objectFit: "cover",
+                        }}
                         className="transition-transform duration-500 group-hover:scale-105"
+                        priority={index < 3} // Prioritize first 3 images
+                        quality={85} // Optimize for web
                       />
                     </div>
                   )}
@@ -119,10 +124,13 @@ export default function LeadershipTeam() {
                     {member.image ? (
                       <Image
                         src={member.image}
-                        alt={member.name}
-                        width={80}
-                        height={80}
-                        style={{ objectFit: "cover", borderRadius: "50%" }}
+                        alt={`${member.name} avatar`}
+                        fill
+                        sizes="80px"
+                        style={{
+                          objectFit: "cover",
+                        }}
+                        className="rounded-full"
                       />
                     ) : (
                       <span className="text-2xl text-white">{member.icon}</span>

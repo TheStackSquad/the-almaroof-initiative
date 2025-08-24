@@ -38,14 +38,20 @@ export default function BiographySection() {
           <div ref={imageRef} style={imageStyle} className="relative w-full">
             <div className="relative overflow-hidden rounded-2xl shadow-2xl transform hover:scale-105 transition-all duration-500">
               {/* The parent of the image must have a defined height. */}
-              <div className="relative w-full h-96">
-                {" "}
-                {/* Added w-full and h-96 for a defined size */}
+              <div className="relative w-full h-96 sm:h-[28rem] lg:h-[32rem] xl:h-[36rem]">
                 <Image
                   src="/img/kendoo.webp"
                   alt="Official portrait of Otunba Kehinde Oloyode Almaroof"
                   fill
-                  className="aspect-[4/5] object-cover"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 40vw, 33vw"
+                  style={{
+                    objectFit: "cover",
+                  }}
+                  className="aspect-[4/5]"
+                  priority={true} // Since this is likely above the fold
+                  quality={90} // Higher quality for portrait images
+                  placeholder="blur"
+                  blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyLli6FfVa4W7rkDQ1HdwwUBIC8tJJr+/6EvZlhqPY5/mLtGBpx9+ggAMhkkm2GcW7qw+FoVhNL7zGu/lqN7+0HHwEQaFjc3CqBgE7adWIXlbvUAHYbN1+kKqOxMoBnzexIWFE+3j9FeqiGJJdYpU+CfB3GNJvdSq/R++qWAbqgAuGfkMJE1aGhXGUzqrDaGgDCiPzNKOExJl1hqy6UWD+zzjGwADyb+8RKZHv/2Q=="
                 />
               </div>
               {/* Decorative Elements */}
