@@ -7,33 +7,43 @@ import {
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 
+/**
+ * A client-side component to display performance-related alerts
+ * based on Core Web Vitals thresholds.
+ *
+ * @param {Object} props - The component props.
+ * @param {Object} props.metrics - An object containing the latest metric values (e.g., { lcp: 2000, inp: 50, cls: 0.05 }).
+ */
 export const AlertSystem = ({ metrics }) => {
   const [alerts, setAlerts] = useState([]);
 
   useEffect(() => {
-    // Performance thresholds are now inside the effect to satisfy the linter.
-    // Since this object is a constant, it doesn't need to be a dependency.
+    // FIX: Update FID threshold to INP threshold. INP is the new Core Web Vital.
+    // The threshold for INP is generally considered to be 200ms.
     const thresholds = {
       lcp: 2500, // ms
-      fid: 100, // ms
+      inp: 200, // ms
       cls: 0.1, // score
       ttfb: 600, // ms
     };
 
     const newAlerts = [];
 
+    // FIX: Iterate over the metrics object to check for alerts.
+    // The metrics object is structured to align with the thresholds object.
     Object.entries(thresholds).forEach(([metric, threshold]) => {
       // Correctly check if the metric value exceeds the threshold
-      if (metrics[metric] && metrics[metric] > threshold) {
+      const metricValue = metrics[metric];
+      if (metricValue && metricValue > threshold) {
         let message;
         if (metric === "cls") {
-          // Fix: CLS is a score, not in milliseconds.
-          message = `Current score: ${metrics[metric].toFixed(
+          // CLS is a score, not in milliseconds.
+          message = `Current score: ${metricValue.toFixed(
             2
           )} | Threshold: ${threshold}`;
         } else {
           message = `Current: ${Math.round(
-            metrics[metric]
+            metricValue
           )}ms | Threshold: ${threshold}ms`;
         }
 
@@ -41,7 +51,7 @@ export const AlertSystem = ({ metrics }) => {
           id: `${metric}-${Date.now()}`,
           type: "warning",
           metric: metric.toUpperCase(),
-          value: metrics[metric],
+          value: metricValue,
           threshold,
           message,
         });
