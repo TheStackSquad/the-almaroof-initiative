@@ -1,8 +1,8 @@
-// src/utils/usePerformanceMetrics.js
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
+// Import the singleton instance, do NOT import createClient
+import { supabase } from "@/utils/supabase/supaClient";
 
 /**
  * A custom hook to fetch and manage real-time web performance metrics from Supabase.
@@ -11,11 +11,6 @@ import { createClient } from "@supabase/supabase-js";
  * @returns {object} An object containing all performance data and loading state.
  */
 export const usePerformanceMetrics = () => {
-  // Supabase client initialization. Using NEXT_PUBLIC env variables for client-side code.
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
   // State to hold all performance metrics data
   const [performanceMetrics, setPerformanceMetrics] = useState([]);
 
@@ -35,14 +30,14 @@ export const usePerformanceMetrics = () => {
     const fetchDataAndSubscribe = async () => {
       try {
         // 1. Fetch initial historical data from the 'performance_metrics' table
-        const { data, error } = await supabase
+        const { data, error: fetchError } = await supabase // Use the imported singleton
           .from("performance_metrics")
           .select("*")
           .order("created_at", { ascending: false });
 
-        if (error) {
-          console.error("Error fetching initial data:", error);
-          setError(error.message);
+        if (fetchError) {
+          console.error("Error fetching initial data:", fetchError);
+          setError(fetchError.message);
           return;
         }
 
@@ -66,7 +61,7 @@ export const usePerformanceMetrics = () => {
       }
 
       // 2. Set up a real-time subscription for new data inserts
-      const channel = supabase
+      const channel = supabase // Use the imported singleton
         .channel("performance_metrics_changes")
         .on(
           "postgres_changes",
@@ -104,12 +99,12 @@ export const usePerformanceMetrics = () => {
 
       // Clean up the subscription on component unmount
       return () => {
-        supabase.removeChannel(channel);
+        supabase.removeChannel(channel); // Use the imported singleton
       };
     };
 
     fetchDataAndSubscribe();
-  }, [supabase]);
+  }, []); // <-- EMPTY dependency array. This effect runs only once on mount.
 
   // Return all states for the component to use
   return {

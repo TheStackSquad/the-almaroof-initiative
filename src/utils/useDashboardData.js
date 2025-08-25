@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 
 /**
  * A custom React hook to fetch all dashboard-specific data.
- * It fetches system stats, active users, and recent performance events.
+ * Now fetches system stats, service demand analytics, and access patterns.
  * @returns {object} An object containing the data, loading state, and any errors.
  */
 export const useDashboardData = () => {
@@ -13,9 +13,29 @@ export const useDashboardData = () => {
     systemStats: {
       uptimeMinutes: 0,
       memoryUsage: 0,
+      totalSessions: 0,
+      totalPageViews: 0,
+      topPages: [],
+      browserDistribution: {},
     },
-    activeUsers: 0,
-    performanceEvents: [],
+    serviceDemand: {
+      totalCitizensEngaged: 0,
+      totalServiceInteractions: 0,
+      serviceCategoryDemand: {},
+      uniqueCitizensByService: {},
+      topServices: [],
+      avgInteractionsPerCitizen: 0,
+    },
+    accessPatterns: {
+      hourlyAccess: {},
+      browserUsage: {},
+      deviceTypes: {},
+      peakUsageTimes: [],
+      weeklyPatterns: {},
+      serviceAccessTrends: {},
+      digitalInclusion: {},
+      totalDataPoints: 0,
+    },
   });
 
   // State to track loading status and errors
@@ -25,39 +45,73 @@ export const useDashboardData = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch all three API routes concurrently using Promise.all
+        setIsLoading(true);
+        setError(null);
+
+        // Fetch all three API routes concurrently
         const [
           systemStatsResponse,
-          activeUsersResponse,
-          performanceEventsResponse,
+          serviceDemandResponse,
+          accessPatternsResponse,
         ] = await Promise.all([
           fetch("/api/admin/system-stats"),
-          fetch("/api/admin/active-users"),
-          fetch("/api/admin/performance-events"),
+          fetch("/api/admin/service-demand"),
+          fetch("/api/admin/access-patterns"),
         ]);
 
-        // Check if all responses are ok
-        if (
-          !systemStatsResponse.ok ||
-          !activeUsersResponse.ok ||
-          !performanceEventsResponse.ok
-        ) {
-          throw new Error("One or more data fetches failed.");
+        // Handle each response independently
+        let systemStats = { uptimeMinutes: 0, memoryUsage: 0 };
+        let serviceDemand = {
+          totalCitizensEngaged: 0,
+          totalServiceInteractions: 0,
+          serviceCategoryDemand: {},
+          topServices: [],
+        };
+        let accessPatterns = {
+          hourlyAccess: {},
+          browserUsage: {},
+          deviceTypes: {},
+          peakUsageTimes: [],
+          weeklyPatterns: {},
+          serviceAccessTrends: {},
+          digitalInclusion: { score: 0 },
+        };
+
+        // Process system stats
+        if (systemStatsResponse.ok) {
+          systemStats = await systemStatsResponse.json();
+        } else {
+          console.warn("System stats API failed:", systemStatsResponse.status);
         }
 
-        // Parse the JSON data from each response
-        const systemStats = await systemStatsResponse.json();
-        const activeUsers = await activeUsersResponse.json();
-        const performanceEvents = await performanceEventsResponse.json();
+        // Process service demand
+        if (serviceDemandResponse.ok) {
+          serviceDemand = await serviceDemandResponse.json();
+        } else {
+          console.warn(
+            "Service demand API failed:",
+            serviceDemandResponse.status
+          );
+        }
+
+        // Process access patterns
+        if (accessPatternsResponse.ok) {
+          accessPatterns = await accessPatternsResponse.json();
+        } else {
+          console.warn(
+            "Access patterns API failed:",
+            accessPatternsResponse.status
+          );
+        }
 
         // Update the state with the new data
         setData({
           systemStats,
-          activeUsers: activeUsers.activeUsers,
-          performanceEvents,
+          serviceDemand,
+          accessPatterns,
         });
       } catch (err) {
-        // Catch any errors during the fetch and update the error state
+        // Catch any unexpected errors
         console.error("Failed to fetch dashboard data:", err);
         setError("Failed to load dashboard data. Please try again later.");
       } finally {
@@ -67,7 +121,7 @@ export const useDashboardData = () => {
     };
 
     fetchData();
-  }, []); // The empty dependency array ensures this effect runs only once on mount
+  }, []); // Runs only once on mount
 
   return { data, isLoading, error };
 };
