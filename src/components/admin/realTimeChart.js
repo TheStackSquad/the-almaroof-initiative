@@ -27,15 +27,22 @@ ChartJS.register(
 /**
  * A real-time line chart component to display web performance metrics.
  *
- * This component visualizes LCP, FID, and CLS data over time,
+ * This component visualizes LCP, INP, CLS, and TTFB data over time,
  * using the data arrays passed from the parent component.
  *
  * @param {Object} props - The component props.
  * @param {Array<Object>} props.lcpData - Array of LCP data points.
- * @param {Array<Object>} props.fidData - Array of FID data points.
  * @param {Array<Object>} props.clsData - Array of CLS data points.
+ * @param {Array<Object>} props.inpData - Array of INP data points.
+ * @param {Array<Object>} props.ttfbData - Array of TTFB data points.
  */
-export const RealTimeChart = ({ lcpData = [], fidData = [], clsData = [] }) => {
+// 👈 UPDATED PROP LIST
+export const RealTimeChart = ({
+  lcpData = [],
+  clsData = [],
+  inpData = [],
+  ttfbData = [],
+}) => {
   // We use a state to hold the chart data.
   const [chartData, setChartData] = useState({
     labels: [],
@@ -44,9 +51,11 @@ export const RealTimeChart = ({ lcpData = [], fidData = [], clsData = [] }) => {
 
   // useEffect to update the chart data whenever a new data point arrives.
   // The effect re-runs when any of the data arrays change.
+  // The useMemo fix in the parent component stops the infinite loop here.
   useEffect(() => {
     // Combine all data points and sort them by creation date for the labels.
-    const allData = [...lcpData, ...fidData, ...clsData].sort(
+    // 👈 INCLUDE INP AND TTFB; FID IS REMOVED
+    const allData = [...lcpData, ...clsData, ...inpData, ...ttfbData].sort(
       (a, b) => new Date(a.created_at) - new Date(b.created_at)
     );
 
@@ -57,8 +66,9 @@ export const RealTimeChart = ({ lcpData = [], fidData = [], clsData = [] }) => {
 
     // Filter and map each dataset.
     const lcpDataset = lcpData.map((d) => d.value);
-    const fidDataset = fidData.map((d) => d.value);
     const clsDataset = clsData.map((d) => d.value);
+    const inpDataset = inpData.map((d) => d.value); // 👈 MAP INP
+    const ttfbDataset = ttfbData.map((d) => d.value); // 👈 MAP TTFB
 
     setChartData({
       labels: labels,
@@ -72,8 +82,8 @@ export const RealTimeChart = ({ lcpData = [], fidData = [], clsData = [] }) => {
           fill: true,
         },
         {
-          label: "FID (ms)",
-          data: fidDataset,
+          label: "INP (ms)", // 👈 UPDATED LABEL (Replaces FID)
+          data: inpDataset, // 👈 USING INP DATA
           borderColor: "rgb(59, 130, 246)",
           backgroundColor: "rgba(59, 130, 246, 0.1)",
           tension: 0.4,
@@ -87,9 +97,18 @@ export const RealTimeChart = ({ lcpData = [], fidData = [], clsData = [] }) => {
           tension: 0.4,
           fill: true,
         },
+        // 👈 NEW DATASET FOR TTFB
+        {
+          label: "TTFB (ms)",
+          data: ttfbDataset,
+          borderColor: "rgb(139, 92, 246)",
+          backgroundColor: "rgba(139, 92, 246, 0.1)",
+          tension: 0.4,
+          fill: true,
+        },
       ],
     });
-  }, [lcpData, fidData, clsData]);
+  }, [lcpData, clsData, inpData, ttfbData]); // 👈 UPDATED DEPENDENCY ARRAY
 
   const options = {
     responsive: true,
@@ -112,7 +131,10 @@ export const RealTimeChart = ({ lcpData = [], fidData = [], clsData = [] }) => {
 
   // Check if any data exists to decide what to render.
   const hasData =
-    lcpData.length > 0 || fidData.length > 0 || clsData.length > 0;
+    lcpData.length > 0 ||
+    clsData.length > 0 ||
+    inpData.length > 0 ||
+    ttfbData.length > 0; // 👈 UPDATED CHECK
 
   return (
     <div>
