@@ -3,9 +3,9 @@
 "use client";
 import { useState, useEffect } from "react";
 import AdminDashboard from "@/components/admin/adminDashboard";
-import RealTimeChart from "@/components/admin/realTimeChart"; // This import is not used
-import AlertSystem from "@/components/admin/alertSystem"; // This import is not used
-import PerformanceMetrics from "@/components/admin/performanceMetrics"; // This import is not used
+//import RealTimeChart from "@/components/admin/realTimeChart"; // This import is not used
+//import AlertSystem from "@/components/admin/alertSystem"; // This import is not used
+//import PerformanceMetrics from "@/components/admin/performanceMetrics"; // This import is not used
 
 // Simple admin authentication (replace with your auth system)
 const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASS || "admin123";

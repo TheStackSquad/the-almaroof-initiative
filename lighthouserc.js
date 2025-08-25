@@ -7,6 +7,12 @@ module.exports = {
         "http://localhost:3000/",
         "http://localhost:3000/about",
         "http://localhost:3000/contact",
+        "http://localhost:3000/community",
+        "http://localhost:3000/yellow-page",
+        "http://localhost:3000/news",
+        "http://localhost:3000/auth-entry",
+        "http://localhost:3000/projects",
+        "http://localhost:3000/admin",
       ],
       numberOfRuns: 3,
     },
@@ -23,5 +29,3 @@ module.exports = {
     },
   },
 };
-
-export default PerformanceErrorBoundary;
