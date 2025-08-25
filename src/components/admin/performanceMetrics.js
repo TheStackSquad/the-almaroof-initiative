@@ -1,4 +1,5 @@
 // components/admin/performanceMetrics.jsx
+
 "use client";
 import { useState, useMemo } from "react";
 import { Bar, Line, Doughnut } from "react-chartjs-2";
@@ -15,6 +16,7 @@ import {
   ArcElement,
 } from "chart.js";
 
+// Register all necessary Chart.js components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -27,22 +29,31 @@ ChartJS.register(
   ArcElement
 );
 
+/**
+ * A component to display historical web performance metrics from Supabase.
+ * It provides interactive charts and average metric cards.
+ *
+ * @param {Object} props - The component props.
+ * @param {Array<Object>} props.data - An array of all performance metric records from Supabase.
+ */
 export const PerformanceMetrics = ({ data = [] }) => {
-  const [selectedMetric, setSelectedMetric] = useState("LCP");
-  const [selectedPage, setSelectedPage] = useState("all");
+  const [selectedMetric, setSelectedMetric] = useState("all"); // Default to 'all'
+  const [selectedPage, setSelectedPage] = useState("all"); // Default to 'all'
 
-  // Process data for charts
+  // Process data for the time series chart
   const chartData = useMemo(() => {
+    // FIX: Filter by the correct property names: 'metric_name' and 'page'
     const filtered = data.filter((item) => {
-      if (selectedPage !== "all" && item.page !== selectedPage) return false;
-      if (selectedMetric !== "all" && item.metric !== selectedMetric)
-        return false;
-      return true;
+      const metricMatches =
+        selectedMetric === "all" || item.metric_name === selectedMetric;
+      const pageMatches = selectedPage === "all" || item.page === selectedPage;
+      return metricMatches && pageMatches;
     });
 
     // Group by hour for time series
     const hourlyData = filtered.reduce((acc, item) => {
-      const hour = new Date(item.timestamp).getHours();
+      // FIX: Use 'created_at' instead of 'timestamp'
+      const hour = new Date(item.created_at).getHours();
       if (!acc[hour]) acc[hour] = [];
       acc[hour].push(item.value);
       return acc;
@@ -58,7 +69,7 @@ export const PerformanceMetrics = ({ data = [] }) => {
       labels: labels.map((h) => `${h}:00`),
       datasets: [
         {
-          label: selectedMetric,
+          label: selectedMetric === "all" ? "Average" : selectedMetric,
           data: values,
           borderColor: "rgb(59, 130, 246)",
           backgroundColor: "rgba(59, 130, 246, 0.1)",
@@ -68,10 +79,10 @@ export const PerformanceMetrics = ({ data = [] }) => {
     };
   }, [data, selectedMetric, selectedPage]);
 
-  // Device breakdown
+  // Process data for device breakdown
   const deviceData = useMemo(() => {
     const devices = data.reduce((acc, item) => {
-      acc[item.userAgent] = (acc[item.userAgent] || 0) + 1;
+      acc[item.user_agent] = (acc[item.user_agent] || 0) + 1; // FIX: use user_agent
       return acc;
     }, {});
 
@@ -84,31 +95,41 @@ export const PerformanceMetrics = ({ data = [] }) => {
             "rgba(59, 130, 246, 0.8)",
             "rgba(16, 185, 129, 0.8)",
             "rgba(245, 158, 11, 0.8)",
+            // Add more colors if needed
           ],
         },
       ],
     };
   }, [data]);
 
-  // Get unique pages and metrics
-  const pages = [...new Set(data.map((item) => item.page))];
-  const metrics = [...new Set(data.map((item) => item.metric))];
-
-  // Calculate averages
+  // Calculate overall averages
   const averages = useMemo(() => {
     const grouped = data.reduce((acc, item) => {
-      if (!acc[item.metric]) acc[item.metric] = [];
-      acc[item.metric].push(item.value);
+      // FIX: Use 'metric_name' instead of 'metric'
+      if (!acc[item.metric_name]) acc[item.metric_name] = [];
+      acc[item.metric_name].push(item.value);
       return acc;
     }, {});
 
     return Object.entries(grouped).reduce((acc, [metric, values]) => {
-      acc[metric] = Math.round(
-        values.reduce((sum, val) => sum + val, 0) / values.length
-      );
+      // Handle CLS, which should not be rounded to an integer
+      const isCls = metric === "CLS";
+      const averageValue =
+        values.reduce((sum, val) => sum + val, 0) / values.length;
+      acc[metric] = isCls ? averageValue.toFixed(2) : Math.round(averageValue);
       return acc;
     }, {});
   }, [data]);
+
+  // Get unique pages and metrics from the data
+  const pages = useMemo(
+    () => [...new Set(data.map((item) => item.page))],
+    [data]
+  );
+  const metrics = useMemo(
+    () => [...new Set(data.map((item) => item.metric_name))],
+    [data]
+  ); // FIX: use metric_name
 
   return (
     <div className="space-y-6">
@@ -166,6 +187,7 @@ export const PerformanceMetrics = ({ data = [] }) => {
             <div className="text-2xl font-bold text-gray-900 dark:text-white">
               {value}
               <span className="text-sm text-gray-500 ml-1">
+                {/* FIX: Ensure unit is correct based on metric */}
                 {metric === "CLS" ? "" : "ms"}
               </span>
             </div>
@@ -180,26 +202,32 @@ export const PerformanceMetrics = ({ data = [] }) => {
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
             Performance Over Time
           </h3>
-          <Line
-            data={chartData}
-            options={{
-              responsive: true,
-              scales: {
-                y: {
-                  beginAtZero: true,
-                  grid: { color: "rgba(156, 163, 175, 0.2)" },
-                  ticks: { color: "rgba(156, 163, 175, 0.8)" },
+          {data.length > 0 ? (
+            <Line
+              data={chartData}
+              options={{
+                responsive: true,
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    grid: { color: "rgba(156, 163, 175, 0.2)" },
+                    ticks: { color: "rgba(156, 163, 175, 0.8)" },
+                  },
+                  x: {
+                    grid: { color: "rgba(156, 163, 175, 0.2)" },
+                    ticks: { color: "rgba(156, 163, 175, 0.8)" },
+                  },
                 },
-                x: {
-                  grid: { color: "rgba(156, 163, 175, 0.2)" },
-                  ticks: { color: "rgba(156, 163, 175, 0.8)" },
+                plugins: {
+                  legend: { labels: { color: "rgba(156, 163, 175, 0.8)" } },
                 },
-              },
-              plugins: {
-                legend: { labels: { color: "rgba(156, 163, 175, 0.8)" } },
-              },
-            }}
-          />
+              }}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-64 text-gray-500">
+              No historical data available.
+            </div>
+          )}
         </div>
 
         {/* Device breakdown */}
@@ -207,15 +235,21 @@ export const PerformanceMetrics = ({ data = [] }) => {
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
             Device Breakdown
           </h3>
-          <Doughnut
-            data={deviceData}
-            options={{
-              responsive: true,
-              plugins: {
-                legend: { labels: { color: "rgba(156, 163, 175, 0.8)" } },
-              },
-            }}
-          />
+          {data.length > 0 ? (
+            <Doughnut
+              data={deviceData}
+              options={{
+                responsive: true,
+                plugins: {
+                  legend: { labels: { color: "rgba(156, 163, 175, 0.8)" } },
+                },
+              }}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-64 text-gray-500">
+              No historical data available.
+            </div>
+          )}
         </div>
       </div>
     </div>
