@@ -1,123 +1,79 @@
+// src/app/AdminDashboard.js
+
 "use client";
+
 import { useState, useEffect } from "react";
 // Assumed to be available components. Their internal logic doesn't need to change.
 import { PerformanceMetrics } from "@/components/admin/performanceMetrics";
 import { RealTimeChart } from "@/components/admin/realTimeChart";
 import { AlertSystem } from "@/components/admin/alertSystem";
 
-// Supabase imports
-import { createClient } from "@supabase/supabase-js";
+// Import the new custom hook to handle all data fetching logic
+import { usePerformanceMetrics } from "@/utils/usePerformanceMetrics";
+// Import the new hook for dashboard-specific data
+import { useDashboardData } from "@/utils/useDashboardData";
 
-// Initialize Supabase client using environment variables
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+/**
+ * A helper function to convert minutes to a formatted "0h 0m" string.
+ * @param {number} totalMinutes The total number of minutes.
+ * @returns {string} The formatted string.
+ */
+const formatUptime = (totalMinutes) => {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = Math.floor(totalMinutes % 60);
+  return `${hours}h ${minutes}m`;
+};
 
 const AdminDashboard = () => {
-  // We're replacing all mock data states with states that will be populated
-  // by real-time data from Supabase.
-  const [performanceMetrics, setPerformanceMetrics] = useState([]);
-  const [lcpData, setLcpData] = useState([]);
-  const [fidData, setFidData] = useState([]);
-  const [clsData, setClsData] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // Use the custom hook to get all the performance metrics data
+  const {
+    performanceMetrics,
+    lcpData,
+    clsData,
+    inpData,
+    ttfbData,
+    isLoading: isPerformanceLoading,
+    error: performanceError,
+  } = usePerformanceMetrics();
 
-  // useEffect to handle data fetching and real-time subscription
-  useEffect(() => {
-    // This is an async function to fetch data
-    const fetchDataAndSubscribe = async () => {
-      try {
-        // 1. Fetch initial historical data from the 'performance_metrics' table
-        // FIX: Change 'timestamp' to 'created_at' to match the database schema.
-        const { data, error } = await supabase
-          .from("performance_metrics")
-          .select("*")
-          .order("created_at", { ascending: false });
+  // Use the new custom hook to get the system and event data
+  const {
+    data: dashboardData,
+    isLoading: isDashboardLoading,
+    error: dashboardError,
+  } = useDashboardData();
 
-        if (error) {
-          console.error("Error fetching initial data:", error);
-          return;
-        }
+  // Combine the loading and error states for a unified display
+  const isLoading = isPerformanceLoading || isDashboardLoading;
+  const error = performanceError || dashboardError;
 
-        if (data) {
-          setPerformanceMetrics(data);
-          // Separate the data into metric-specific arrays for the chart and alerts
-          setLcpData(data.filter((d) => d.metric_name === "LCP"));
-          setFidData(data.filter((d) => d.metric_name === "FID"));
-          setClsData(data.filter((d) => d.metric_name === "CLS"));
-        }
-      } catch (error) {
-        console.error("An error occurred during initial data fetch:", error);
-      } finally {
-        setIsLoading(false);
-      }
-
-      // 2. Set up a real-time subscription to listen for new data inserts
-      // We are subscribing to all changes in the 'performance_metrics' table
-      const channel = supabase
-        .channel("performance_metrics_changes")
-        .on(
-          "postgres_changes",
-          { event: "INSERT", schema: "public", table: "performance_metrics" },
-          (payload) => {
-            console.log("Real-time INSERT received:", payload.new);
-            // On a new insert, update the state to include the new data point
-            setPerformanceMetrics((prevData) => [...prevData, payload.new]);
-
-            // Now, we update the metric-specific data arrays
-            switch (
-              payload.new.metric_name // FIX: Use 'metric_name'
-            ) {
-              case "LCP":
-                setLcpData((prevData) => [...prevData, payload.new]);
-                break;
-              case "FID":
-                setFidData((prevData) => [...prevData, payload.new]);
-                break;
-              case "CLS":
-                setClsData((prevData) => [...prevData, payload.new]);
-                break;
-              case "INP": // Handle INP and TTFB as well
-                setFidData((prevData) => [...prevData, payload.new]);
-                break;
-              case "TTFB":
-                setClsData((prevData) => [...prevData, payload.new]);
-                break;
-              default:
-                break;
-            }
-          }
-        )
-        .subscribe();
-
-      // Clean up the subscription on component unmount
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    };
-
-    fetchDataAndSubscribe();
-  }, []); // Empty dependency array to run only once on mount
-
-  // FIX: Create a single metrics object with the latest values to pass to AlertSystem
-  // We need to get the last entry for each metric from the respective data arrays.
+  // Create a single metrics object with the latest values to pass to AlertSystem.
+  // Note: FID data is no longer collected, so we will remove it.
   const latestLcp = lcpData[lcpData.length - 1]?.value;
-  const latestFid = fidData[fidData.length - 1]?.value;
   const latestCls = clsData[clsData.length - 1]?.value;
+  const latestInp = inpData[inpData.length - 1]?.value;
+  const latestTtfb = ttfbData[ttfbData.length - 1]?.value;
 
   const realTimeMetrics = {
     lcp: latestLcp,
-    fid: latestFid,
     cls: latestCls,
-    // Note: If you want to include INP or TTFB, you would add them here.
-    // For now, we will stick to the existing alert system metrics.
+    inp: latestInp,
+    ttfb: latestTtfb,
   };
 
-  // Conditional rendering while data is being fetched
+  // Conditional rendering for loading and error states
   if (isLoading) {
     return (
       <div className="bg-gray-100 dark:bg-gray-900 min-h-screen text-gray-900 dark:text-white p-6 flex items-center justify-center">
         <div className="text-xl font-medium">Loading dashboard data...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-gray-100 dark:bg-gray-900 min-h-screen text-gray-900 dark:text-white p-6 flex items-center justify-center">
+        <div className="text-xl font-medium text-red-500">Error: {error}</div>
       </div>
     );
   }
@@ -129,7 +85,7 @@ const AdminDashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-          {/* ... (System Overview content here - unchanged) ... */}
+          {/* We are now using dynamic data from the useDashboardData hook */}
           <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               System Overview
@@ -140,7 +96,7 @@ const AdminDashboard = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
               <div className="text-center">
                 <div className="text-3xl font-bold text-green-600 dark:text-green-400">
-                  0h 0m
+                  {formatUptime(dashboardData.systemStats.uptimeMinutes)}
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">
                   System Uptime
@@ -149,7 +105,7 @@ const AdminDashboard = () => {
 
               <div className="text-center">
                 <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                  0%
+                  {(dashboardData.systemStats.memoryUsage * 100).toFixed(0)}%
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">
                   Memory Usage
@@ -158,7 +114,7 @@ const AdminDashboard = () => {
 
               <div className="text-center">
                 <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">
-                  0
+                  {dashboardData.activeUsers}
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">
                   Active Users
@@ -181,28 +137,8 @@ const AdminDashboard = () => {
               </h3>
 
               <div className="space-y-3">
-                {[
-                  {
-                    time: "2 mins ago",
-                    event: "High LCP detected on /about page",
-                    severity: "warning",
-                  },
-                  {
-                    time: "5 mins ago",
-                    event: "Performance budget exceeded for JS bundle",
-                    severity: "error",
-                  },
-                  {
-                    time: "8 mins ago",
-                    event: "Core Web Vitals improved across all pages",
-                    severity: "success",
-                  },
-                  {
-                    time: "12 mins ago",
-                    event: "New performance baseline established",
-                    severity: "info",
-                  },
-                ].map((event, index) => (
+                {/* Now mapping over the data from the hook */}
+                {dashboardData.performanceEvents.map((event, index) => (
                   <div
                     key={index}
                     className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700"
@@ -276,7 +212,7 @@ const AdminDashboard = () => {
             </div>
           </div>
         </div>
-        {/* FIX: Pass a single `metrics` object instead of separate arrays */}
+        {/* Pass a single `metrics` object to the AlertSystem */}
         <AlertSystem metrics={realTimeMetrics} />
       </div>
 
@@ -285,14 +221,15 @@ const AdminDashboard = () => {
           <h2 className="text-xl font-semibold mb-4">Real-Time Metrics</h2>
           <RealTimeChart
             lcpData={lcpData}
-            fidData={fidData}
             clsData={clsData}
+            inpData={inpData}
+            ttfbData={ttfbData}
           />
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold mb-4">Historical Performance</h2>
-          {/* We pass the full performanceMetrics array to the historical component */}
+          {/* Pass the full performanceMetrics array to the historical component */}
           <PerformanceMetrics data={performanceMetrics} />
         </div>
       </div>
