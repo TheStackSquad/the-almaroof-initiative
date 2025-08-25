@@ -109,7 +109,7 @@ export const usePerformanceMetrics = () => {
     };
 
     fetchDataAndSubscribe();
-  }, []); // Empty dependency array to run only once on mount
+  }, [supabase]);
 
   // Return all states for the component to use
   return {
