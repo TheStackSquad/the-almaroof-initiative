@@ -4,13 +4,6 @@
       "maxDuration": 30
     }
   },
-  "buildCommand": "next build",
-  "outputDirectory": ".next",
-  "framework": "nextjs",
-  "cacheDirectories": [
-    ".next/cache",
-    "node_modules/.cache"
-  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -22,19 +15,8 @@
         {
           "key": "X-Frame-Options",
           "value": "DENY"
-        },
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
         }
       ]
     }
-  ],
-  "env": {
-    "NEXT_TELEMETRY_DISABLED": "1"
-  }
+  ]
 }
