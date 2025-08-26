@@ -150,7 +150,7 @@ export default function SignInPrompt({
             <Button
               variant="light"
               size="sm"
-              onClick={() => window.history.back()}
+              onPress={() => window.history.back()}
               className="w-full text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
               aria-label="Go back to previous page"
             >
