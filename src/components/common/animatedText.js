@@ -48,7 +48,7 @@ const AnimatedText = () => {
   }, [isVisible, canAnimate]);
 
   return (
-    <div 
+    <div
       ref={ref}
       className="flex flex-col items-center justify-center md:flex-row md:items-center md:justify-between p-4 bg-white
       dark:bg-gray-900 rounded-3xl shadow-xl border border-gray-200
@@ -65,7 +65,7 @@ const AnimatedText = () => {
               animate="animate"
               exit="exit"
               className="absolute w-full text-lg md:text-xl font-bold font-body text-gray-800 dark:text-white text-center md:text-left"
-              style={{ willChange: 'opacity, transform' }}
+              style={{ willChange: "opacity, transform" }}
             >
               {services[currentIndex]}
             </motion.p>
@@ -77,7 +77,7 @@ const AnimatedText = () => {
           </p>
         )}
       </div>
-      
+
       {/* Button - full width on mobile, auto width on desktop */}
       <Link href="/auth-entry" className="w-full md:w-auto">
         <button className="w-full md:w-auto px-6 py-3 text-base bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">
