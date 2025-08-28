@@ -53,12 +53,20 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Desktop dropdown states
-  const [aboutDropdownRef, isAboutOpen, toggleAbout, closeAbout] = useDropdown();
-  const [communityDropdownRef, isCommunityOpen, toggleCommunity, closeCommunity] = useDropdown();
+  const [aboutDropdownRef, isAboutOpen, toggleAbout, closeAbout] =
+    useDropdown();
+  const [
+    communityDropdownRef,
+    isCommunityOpen,
+    toggleCommunity,
+    closeCommunity,
+  ] = useDropdown();
 
   // Mobile dropdown states (separate from desktop)
-  const [, isMobileAboutOpen, toggleMobileAbout, closeMobileAbout] = useDropdown();
-  const [, isMobileCommunityOpen, toggleMobileCommunity, closeMobileCommunity] = useDropdown();
+  const [, isMobileAboutOpen, toggleMobileAbout, closeMobileAbout] =
+    useDropdown();
+  const [, isMobileCommunityOpen, toggleMobileCommunity, closeMobileCommunity] =
+    useDropdown();
 
   const menuRef = useRef(null);
   const menuButtonRef = useRef(null);
@@ -112,7 +120,7 @@ export default function Header() {
   const handleMenuToggle = () => {
     const newMenuOpen = !menuOpen;
     setMenuOpen(newMenuOpen);
-    
+
     // Close all dropdowns when closing menu
     if (!newMenuOpen) {
       closeMobileAbout();
@@ -149,7 +157,7 @@ export default function Header() {
             closeCommunity={closeCommunity}
             communityDropdownRef={communityDropdownRef}
           />
-          
+
           {/* Theme and Language switcher grouped closely */}
           <div className="flex items-center gap-3">
             <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
