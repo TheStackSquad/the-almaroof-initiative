@@ -24,9 +24,14 @@ export const usePerformanceMetrics = () => {
     const fetchDataAndSubscribe = async () => {
       try {
         // 1. Fetch initial historical data from the 'performance_metrics' table
-        const { data, error: fetchError } = await supabase // Use the imported singleton
+        
+        const twentyFourHoursAgo = new Date(
+          Date.now() - 24 * 60 * 60 * 1000
+        ).toISOString();
+        const { data, error: fetchError } = await supabase
           .from("performance_metrics")
           .select("*")
+          .gte("created_at", twentyFourHoursAgo) // ← ONLY THIS LINE ADDED
           .order("created_at", { ascending: false });
 
         if (fetchError) {

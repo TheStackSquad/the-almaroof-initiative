@@ -11,6 +11,7 @@ import {
   LineElement,
   Tooltip,
   Legend,
+  Filler
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 
@@ -21,22 +22,10 @@ ChartJS.register(
   PointElement,
   LineElement,
   Tooltip,
-  Legend
+  Legend,
+  Filler
 );
 
-/**
- * A real-time line chart component to display web performance metrics.
- *
- * This component visualizes LCP, INP, CLS, and TTFB data over time,
- * using the data arrays passed from the parent component.
- *
- * @param {Object} props - The component props.
- * @param {Array<Object>} props.lcpData - Array of LCP data points.
- * @param {Array<Object>} props.clsData - Array of CLS data points.
- * @param {Array<Object>} props.inpData - Array of INP data points.
- * @param {Array<Object>} props.ttfbData - Array of TTFB data points.
- */
-// 👈 UPDATED PROP LIST
 export const RealTimeChart = ({
   lcpData = [],
   clsData = [],
@@ -49,12 +38,33 @@ export const RealTimeChart = ({
     datasets: [],
   });
 
-  // useEffect to update the chart data whenever a new data point arrives.
-  // The effect re-runs when any of the data arrays change.
-  // The useMemo fix in the parent component stops the infinite loop here.
+  // Debug logging useEffect - separate from the chart data effect
+  useEffect(() => {
+    console.log("=== REAL-TIME CHART DATA DEBUG ===");
+    console.log("LCP Data:", lcpData);
+    console.log("CLS Data:", clsData);
+    console.log("INP Data:", inpData);
+    console.log("TTFB Data:", ttfbData);
+
+    // Check the actual timestamps
+    const allData = [...lcpData, ...clsData, ...inpData, ...ttfbData];
+    console.log(
+      "All timestamps:",
+      allData.map((d) => d.created_at)
+    );
+
+    // Log timezone info for debugging
+    console.log(
+      "Browser timezone:",
+      Intl.DateTimeFormat().resolvedOptions().timeZone
+    );
+    console.log("Current local time:", new Date().toLocaleString());
+    console.log("================================");
+  }, [lcpData, clsData, inpData, ttfbData]);
+
+  // Separate useEffect for chart data processing
   useEffect(() => {
     // Combine all data points and sort them by creation date for the labels.
-    // 👈 INCLUDE INP AND TTFB; FID IS REMOVED
     const allData = [...lcpData, ...clsData, ...inpData, ...ttfbData].sort(
       (a, b) => new Date(a.created_at) - new Date(b.created_at)
     );
@@ -67,8 +77,8 @@ export const RealTimeChart = ({
     // Filter and map each dataset.
     const lcpDataset = lcpData.map((d) => d.value);
     const clsDataset = clsData.map((d) => d.value);
-    const inpDataset = inpData.map((d) => d.value); // 👈 MAP INP
-    const ttfbDataset = ttfbData.map((d) => d.value); // 👈 MAP TTFB
+    const inpDataset = inpData.map((d) => d.value);
+    const ttfbDataset = ttfbData.map((d) => d.value);
 
     setChartData({
       labels: labels,
@@ -82,8 +92,8 @@ export const RealTimeChart = ({
           fill: true,
         },
         {
-          label: "INP (ms)", // 👈 UPDATED LABEL (Replaces FID)
-          data: inpDataset, // 👈 USING INP DATA
+          label: "INP (ms)",
+          data: inpDataset,
           borderColor: "rgb(59, 130, 246)",
           backgroundColor: "rgba(59, 130, 246, 0.1)",
           tension: 0.4,
@@ -97,7 +107,6 @@ export const RealTimeChart = ({
           tension: 0.4,
           fill: true,
         },
-        // 👈 NEW DATASET FOR TTFB
         {
           label: "TTFB (ms)",
           data: ttfbDataset,
@@ -108,7 +117,7 @@ export const RealTimeChart = ({
         },
       ],
     });
-  }, [lcpData, clsData, inpData, ttfbData]); // 👈 UPDATED DEPENDENCY ARRAY
+  }, [lcpData, clsData, inpData, ttfbData]);
 
   const options = {
     responsive: true,
@@ -134,7 +143,7 @@ export const RealTimeChart = ({
     lcpData.length > 0 ||
     clsData.length > 0 ||
     inpData.length > 0 ||
-    ttfbData.length > 0; // 👈 UPDATED CHECK
+    ttfbData.length > 0;
 
   return (
     <div>

@@ -18,9 +18,32 @@ export default function ContactForm() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
+
+    try {
+      const response = await fetch("/api/contact/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        console.log("Form submitted successfully:", result);
+        // Reset form, show success message, etc.
+        setFormData({ name: "", email: "", subject: "", message: "" });
+      } else {
+        console.error("Form submission failed:", result.error);
+        // Show error message to user
+      }
+    } catch (error) {
+      console.error("Network error:", error);
+      // Show network error message
+    }
   };
 
   return (
