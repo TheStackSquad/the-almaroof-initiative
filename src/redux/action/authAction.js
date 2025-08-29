@@ -283,16 +283,16 @@ export const logoutUser = () => async (dispatch) => {
   dispatch({ type: AUTH_ACTIONS.LOGOUT_REQUEST });
 
   try {
-    // Call logout endpoint (optional - for token blacklisting)
+    // Clear server-side session (HttpOnly cookie)
     await api.post(API_ENDPOINTS.LOGOUT);
   } catch (error) {
-    // Continue with logout even if API call fails
     console.warn("Logout API call failed:", error);
   } finally {
-    // Clear local storage
+    // Clear client storage
     localStorage.removeItem("auth_token");
     localStorage.removeItem("user_data");
 
+    // Dispatch success - this should reset the auth state
     dispatch({
       type: AUTH_ACTIONS.LOGOUT_SUCCESS,
       payload: { message: "Logged out successfully" },

@@ -7,12 +7,21 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 export async function GET(request) {
   try {
-    // 1. Get the token from the HttpOnly cookie - await cookies() in Next.js 15
+    // 1. Validate JWT_SECRET exists
+    if (!JWT_SECRET) {
+      console.error("JWT_SECRET environment variable not configured");
+      return NextResponse.json(
+        { message: "Server configuration error." },
+        { status: 500 }
+      );
+    }
+
+    // 2. Get the token from HttpOnly cookie
     const cookieStore = await cookies();
     const tokenCookie = cookieStore.get("auth_token");
 
     if (!tokenCookie) {
-      console.log("❌ No auth token cookie found.");
+      console.log("No auth token cookie found");
       return NextResponse.json(
         { message: "Authentication token is missing." },
         { status: 401 }
@@ -21,58 +30,54 @@ export async function GET(request) {
 
     const token = tokenCookie.value;
 
-    // --- LOGGING FOR DEBUGGING ---
-    const decodedPayload = jwt.decode(token);
-    console.log("🕵️‍♂️ Token Payload (for debugging):", decodedPayload);
-    // --- END LOGGING ---
-
-    // 3. Verify the token
+    // 3. Verify the token securely
     const decoded = jwt.verify(token, JWT_SECRET);
 
-    // 4. Extract complete user data from token payload
+    // Secure logging - no PII exposure
+    console.log("Session validated for user ID:", decoded.id || decoded.userId);
+
+    // 4. Extract only essential user data for client
     const userData = {
-      id: decoded.userId || decoded.id, // Handle both userId and id
-      userId: decoded.userId || decoded.id, // Ensure userId is always available
+      id: decoded.id || decoded.userId, // Standardize on 'id'
       email: decoded.email,
-      phone: decoded.phone || null,
       username: decoded.username || null,
-      is_verified: decoded.isVerified || decoded.is_verified || false,
-      created_at: decoded.created_at || null,
-      updated_at: decoded.updated_at || null,
-      last_login_attempt: decoded.last_login_attempt || null,
-      failed_attempts_count: decoded.failed_attempts_count || 0,
-      account_locked_until: decoded.account_locked_until || null,
+      is_verified: decoded.is_verified || decoded.isVerified || false,
       authProvider: decoded.authProvider || "traditional",
-      lastLoginAt: decoded.lastLoginAt || new Date().toISOString(),
+      // Only include phone if absolutely necessary for UI
+      ...(decoded.phone && { phone: decoded.phone }),
     };
 
-    console.log("✅ Returning complete user data:", userData);
-
-    // 5. Return complete user data matching signin structure
+    // 5. Return minimal safe user data
     return NextResponse.json(
       {
         message: "Session is valid.",
         user: userData,
         authProvider: userData.authProvider,
-        lastLoginAt: userData.lastLoginAt,
+        lastLoginAt: decoded.lastLoginAt || new Date().toISOString(),
       },
       { status: 200 }
     );
   } catch (error) {
-    console.error("🚨 Token verification failed:", error.message);
+    // Secure error logging without exposing details
+    if (error.name === "TokenExpiredError") {
+      console.log("Token expired - requiring reauthentication");
+    } else if (error.name === "JsonWebTokenError") {
+      console.log("Invalid token format received");
+    } else {
+      console.error("Token verification error type:", error.name);
+    }
 
-    // Clear invalid cookie
+    // Clear invalid cookie securely
     const response = NextResponse.json(
       { message: "Session token is invalid or expired." },
       { status: 401 }
     );
 
-    // Clear the invalid cookie
     response.cookies.set("auth_token", "", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      expires: new Date(0), // Expire immediately
+      expires: new Date(0),
       path: "/",
     });
 

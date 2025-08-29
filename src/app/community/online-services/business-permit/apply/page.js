@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 import PermitForm from "@/components/forms/permitForm";
 import AuthLoader from "@/components/common/authLoader";
 import { useAuthRedirect } from "@/utils/auth/useAuthRedirect";
+import { LogoutDropdownItem } from "@/components/common/buttons/logoutButton";
 
 export default function BusinessPermitApplyPage() {
   // Use the custom hook to handle auth state and redirection logic
@@ -36,7 +37,8 @@ export default function BusinessPermitApplyPage() {
         {/* Left Side: Page Title, User Info, and Help Sections */}
         <div className="lg:col-span-1 space-y-6">
           {/* Page Title & Description */}
-          <div className="text-left">
+          <div className="text-left mt-10 mb-10">
+            <LogoutDropdownItem />
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold font-montserrat text-gray-900 dark:text-gray-100 mb-2 leading-tight">
               Apply for Business Permit
             </h1>

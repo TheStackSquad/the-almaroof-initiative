@@ -3,15 +3,15 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs"; // Assuming you have bcryptjs installed for password hashing
+import bcrypt from "bcryptjs";
 import { supabaseAdmin } from "@/utils/supabase/supabaseAdmin";
 import { generateAuthToken } from "@/lib/authService/token";
 import { validateSigninData } from "@/middleware/validate";
 import { handleFailedAttempts } from "@/middleware/rate/handleFailedAttempts";
 import { cookies } from "next/headers";
 
-// Set a threshold for password comparison timing to prevent timing attacks
 const BCRYPT_SALT_ROUNDS = 10;
+const DUMMY_PASSWORD = "dummy_value_$#@!2024"; // More realistic dummy
 
 export async function POST(request) {
   try {
@@ -22,55 +22,60 @@ export async function POST(request) {
     if (!validation.isValid) {
       return NextResponse.json(
         { message: validation.message },
-        { status: 400 } // Bad Request
+        { status: 400 }
       );
     }
 
-    // 2. Fetch User from Database
-    const { data: users, error: fetchError } = await supabaseAdmin
+    // 2. Fetch ONLY necessary user fields for security
+    const { data: user, error: fetchError } = await supabaseAdmin
       .from("users")
-      .select("*")
+      .select(
+        "id, hashed_password, account_locked_until, failed_attempts_count, email, username, phone"
+      )
       .eq("email", email)
       .single();
 
-    if (fetchError || !users) {
-      // Return a generic error message for security to prevent user enumeration
-      console.warn(`User with email '${email}' not found.`);
-      return NextResponse.json(
-        { message: "Invalid email or password." },
-        { status: 401 } // Unauthorized
-      );
+    // 3. TIMING ATTACK FIX: Use constant-time comparison regardless of user existence
+    let comparisonHash;
+    let userExists = false;
+
+    if (fetchError || !user) {
+      // User doesn't exist - use dummy hash
+      comparisonHash = await bcrypt.hash(DUMMY_PASSWORD, BCRYPT_SALT_ROUNDS);
+      console.warn(`Authentication attempt for non-existent email: ${email}`);
+    } else {
+      // User exists - use actual hash
+      comparisonHash = user.hashed_password;
+      userExists = true;
+
+      // 4. Brute-Force Protection Check (only for existing users)
+      const now = new Date();
+      if (
+        user.account_locked_until &&
+        new Date(user.account_locked_until) > now
+      ) {
+        return NextResponse.json(
+          { message: "Account locked. Please try again later." },
+          { status: 403 }
+        );
+      }
     }
 
-    const user = users;
-    console.log('user from db:', user);
-
-    // 3. Brute-Force Protection Check
-    const now = new Date();
-    if (
-      user.account_locked_until &&
-      new Date(user.account_locked_until) > now
-    ) {
-      return NextResponse.json(
-        { message: "Account locked. Please try again later." },
-        { status: 403 } // Forbidden
-      );
-    }
-
-    // 4. Verify Password
-    const passwordsMatch = await bcrypt.compare(password, user.hashed_password);
+    // 5. Verify Password (constant-time regardless of user existence)
+    const passwordsMatch = await bcrypt.compare(password, comparisonHash);
 
     if (!passwordsMatch) {
-      // 5. Handle Failed Attempt & Return Generic Error
-      await handleFailedAttempts(user);
+      // Only handle failed attempts if user actually exists
+      if (userExists) {
+        await handleFailedAttempts(user);
+      }
       return NextResponse.json(
         { message: "Invalid email or password." },
-        { status: 401 } // Unauthorized
+        { status: 401 }
       );
     }
 
-    // 6. Handle Success
-    // Reset failed attempts and set is_verified to true
+    // 6. Handle Success (only reached if user exists AND password matches)
     const { error: updateError } = await supabaseAdmin
       .from("users")
       .update({
@@ -82,42 +87,56 @@ export async function POST(request) {
 
     if (updateError) {
       console.error(
-        "🚨 Error updating user record after successful sign-in:",
-        updateError
+        "Error updating user record after sign-in:",
+        updateError.message
       );
       return NextResponse.json(
         { message: "An internal server error occurred." },
-        { status: 500 } // Internal Server Error
+        { status: 500 }
       );
     }
 
-    // 7. Generate a secure JWT
+    // 7. Generate secure JWT
     const token = await generateAuthToken(user);
-    const userData = { ...user, is_verified: true }; // Update local user object for the response
-      console.log("unvieling userData:", userData, user);
 
-    // 8. Set the token in a secure HttpOnly cookie (AWAITED)
+    // 8. Return minimal safe user data (no sensitive fields)
+    const userData = {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      is_verified: true,
+      // Include phone only if absolutely necessary
+      ...(user.phone && { phone: user.phone }),
+    };
+
+    // Secure logging
+    console.log("Successful sign-in for user:", user.id);
+
+    // 9. Set secure HttpOnly cookie
     const cookieStore = await cookies();
     cookieStore.set("auth_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       path: "/",
+      // Add maxAge for better session management
+      maxAge: 60 * 60 * 24 * 7, // 7 days
     });
 
-    // 9. Return a successful response without the token in the body
+    // 10. Return success response
     return NextResponse.json(
       {
         message: "Signed in successfully!",
         user: userData,
       },
-      { status: 200 } // OK
+      { status: 200 }
     );
   } catch (error) {
-    console.error("🚨 Sign-in route unexpected error:", error);
+    // Secure error logging
+    console.error("Sign-in route error:", error.name);
     return NextResponse.json(
       { message: "An internal server error occurred." },
-      { status: 500 } // Internal Server Error
+      { status: 500 }
     );
   }
 }
