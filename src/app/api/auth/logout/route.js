@@ -1,30 +1,26 @@
-// ==============================================
-// FILE: src/app/api/auth/logout/route.js
-// Description: This endpoint clears the authentication cookie.
-// ==============================================
-
+// src/app/api/auth/logout/route.js
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 
 export async function POST() {
-  const response = new NextResponse(
-    JSON.stringify({ success: true, message: "Logged out" }),
-    {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
+  try {
+    // Clear the auth cookie
+    const response = NextResponse.json(
+      { message: "Logged out successfully" },
+      { status: 200 }
+    );
 
-  // Clear the HttpOnly cookie by setting its expiration to a past date
-  response.cookies.set({
-    name: "authToken",
-    value: "",
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 0,
-  });
+    response.cookies.set("auth_token", "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      expires: new Date(0),
+      path: "/",
+    });
 
-  return response;
+    return response;
+  } catch (error) {
+    console.error("Logout error:", error);
+    return NextResponse.json({ message: "Logout failed" }, { status: 500 });
+  }
 }

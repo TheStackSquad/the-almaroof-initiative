@@ -9,23 +9,27 @@ import { checkSession } from "@/redux/action/authAction";
 export const useAuthRedirect = (redirectUrl) => {
   const router = useRouter();
   const dispatch = useDispatch();
-  const { isAuthenticated, loading } = useSelector((state) => state.auth);
+  const { isAuthenticated, loading, sessionChecked } = useSelector(
+    (state) => state.auth
+  );
 
   useEffect(() => {
-    // Dispatch the session check action when the component mounts.
-    dispatch(checkSession());
-  }, [dispatch]);
+    // Always check session on mount, but respect loading state
+    if (!loading) {
+      dispatch(checkSession());
+    }
+  }, [dispatch, loading]); // Remove sessionChecked from dependencies
 
   useEffect(() => {
-    // Redirect if the loading state is false and the user is not authenticated.
-    if (!loading && !isAuthenticated) {
-      console.log("❌ User not authenticated, redirecting to login");
+    // Redirect only when session is checked and not authenticated
+    if (sessionChecked && !isAuthenticated && !loading) {
+      console.log("User not authenticated, redirecting to login");
       const encodedRedirect = encodeURIComponent(redirectUrl);
       router.push(
         `/community/online-services/protected-route?redirect=${encodedRedirect}`
       );
     }
-  }, [loading, isAuthenticated, router, redirectUrl]);
+  }, [sessionChecked, isAuthenticated, loading, router, redirectUrl]);
 
-  return { isLoading: loading, isAuthenticated };
+  return { isLoading: loading, isAuthenticated, sessionChecked };
 };

@@ -4,12 +4,6 @@ import { useState, useEffect } from "react";
 // Import the singleton instance, do NOT import createClient
 import { supabase } from "@/utils/supabase/supaClient";
 
-/**
- * A custom hook to fetch and manage real-time web performance metrics from Supabase.
- * It fetches historical data on mount and subscribes to new data inserts.
- *
- * @returns {object} An object containing all performance data and loading state.
- */
 export const usePerformanceMetrics = () => {
   // State to hold all performance metrics data
   const [performanceMetrics, setPerformanceMetrics] = useState([]);

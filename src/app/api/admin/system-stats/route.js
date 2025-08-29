@@ -80,9 +80,7 @@ export async function GET(request) {
       browserDistribution: browserData || {},
 
       // Performance overview (we'll keep this structure for future use)
-      metricsSummary: {},
-
-      // REMOVED: mock memoryUsage and uptimeMinutes
+      metricsSummary: {},  //explain what this data can look like
     };
 
     return new Response(JSON.stringify(data), {
