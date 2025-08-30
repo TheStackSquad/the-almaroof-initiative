@@ -6,9 +6,15 @@ module.exports = {
       url: [
         "http://localhost:3000/",
         "http://localhost:3000/about",
+        // "http://localhost:3000/admin/performance",
+        // "http://localhost:3000/auth-entry",
         "http://localhost:3000/contact",
         "http://localhost:3000/community",
-        "http://localhost:3000/yellow-page",
+        "http://localhost:3000/community/services",
+        "http://localhost:3000/community/services/business-permit/apply",
+        "http://localhost:3000/community/services/birth-certificate/register",
+        "http://localhost:3000/community/services/tax-payment/pay",
+        "http://localhost:3000/community/yellow-page",
         "http://localhost:3000/news",
         "http://localhost:3000/projects",
         // Removed /admin and /auth-entry as they likely require authentication
