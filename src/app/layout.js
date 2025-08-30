@@ -9,7 +9,6 @@ import ErrorBoundaryInit from "@/errorBoundary/errorBoundaryInit";
 import ClientOnlyWrapper from "@/components/common/clientOnlyWrapper";
 import HydrationProvider from "@/components/common/hydrationProvider";
 import RealUserMonitoring from "@/components/performance/realUserMonitoring";
-import NextAuthProvider from "@/layoutProvider/nextAuthProvider";
 
 export const metadata = {
   title: "The Almaroof Initiative",
@@ -31,7 +30,7 @@ export default function RootLayout({ children }) {
             <ErrorBoundaryInit>
               <HydrationProvider>
                 <ReduxProvider>
-                  <NextAuthProvider>
+               
                     {/* Header with loading skeleton */}
                     <ClientOnlyWrapper fallback={<HeaderSkeleton />}>
                       <Header />
@@ -51,7 +50,7 @@ export default function RootLayout({ children }) {
                     <ClientOnlyWrapper>
                       <RealUserMonitoring />
                     </ClientOnlyWrapper>
-                  </NextAuthProvider>
+              
                 </ReduxProvider>
               </HydrationProvider>
             </ErrorBoundaryInit>

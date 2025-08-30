@@ -43,6 +43,12 @@ const navItems = [
         icon: "🏫",
         path: "/community/yellow-page",
       },
+      // {
+      //   id: "logout",
+      //   label: "Logout",
+      //   icon: "🚪", // Using a door emoji for logout
+      //   isLogout: true, // Flag to identify this as a logout action
+      // },
     ],
   },
   { path: "/contact", label: "Contact" },
