@@ -1,36 +1,36 @@
-//src/app/community/online-services/business-permit/apply/page.js
+// src/app/community/online-services/business-permit/apply/page.js
 "use client";
 
 import React from "react";
-import { useSelector } from "react-redux";
+import { useAuth } from "@/utils/auth/useAuth";
 import PermitForm from "@/components/forms/permitForm";
 import AuthLoader from "@/components/common/authLoader";
-import { useAuthRedirect } from "@/utils/auth/useAuthRedirect";
 import { LogoutDropdownItem } from "@/components/common/buttons/logoutButton";
 
 export default function BusinessPermitApplyPage() {
-  // Use the custom hook to handle auth state and redirection logic
-  const { isLoading, isAuthenticated } = useAuthRedirect(
-    "/community/online-services/business-permit/apply/"
-  );
+  // Step 1: Replace useAuthRedirect with the more robust useAuth hook
+  const { isLoading, isSecurelyAuthenticated, user, requireAuth } = useAuth();
 
-  // Get user data from Redux, as the hook doesn't handle this
-  const { user } = useSelector((state) => state.auth);
-  // console.log('unvieling user:', user);
+  // Step 2: Use requireAuth to handle the redirect logic declaratively
+  const authStatus = requireAuth({
+    redirectTo: "/community/online-services/protected-route",
+    returnUrl: true,
+  });
 
-  // Show a loading spinner while the auth check is in progress
+  // Step 3: Handle the loading state while the authentication check is in progress
   if (isLoading) {
     return <AuthLoader message="Verifying Access" type="loading" />;
   }
 
-  // If not authenticated, show a redirecting message. The hook will handle the actual redirect.
-  if (!isAuthenticated) {
+  // Step 4: If the user is not securely authenticated, display an unauthenticated message
+  // Note: The requireAuth hook handles the actual redirection, so this component only needs to manage its UI state
+  if (!isSecurelyAuthenticated) {
     return (
       <AuthLoader message="Authentication Required" type="unauthenticated" />
     );
   }
 
-  // If authenticated, render the main page content
+  // Step 5: If securely authenticated, render the main page content
   return (
     <main className="min-h-screen py-10 px-4 sm:px-8 bg-gray-50 dark:bg-gray-900 font-roboto">
       <div className="max-w-7xl mx-auto space-y-8 lg:grid lg:grid-cols-3 lg:gap-8">
