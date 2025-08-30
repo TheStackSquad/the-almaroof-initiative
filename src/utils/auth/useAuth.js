@@ -142,7 +142,7 @@ export function useAuth() {
   const requireAuth = useCallback(
     (options = {}) => {
       const {
-        redirectTo = "/auth-entry",
+        redirectTo = "/login",
         checkSession = true,
         returnUrl = true,
       } = options;
