@@ -171,6 +171,23 @@ const authReducer = (state = AUTH_INITIAL_STATE, action) => {
         sessionChecked: true, // Mark session as checked even on failure
       };
 
+    case AUTH_ACTIONS.REFRESH_TOKEN_SUCCESS:
+      return {
+        ...state,
+        isRefreshing: false,
+        token: action.payload.token,
+        tokenExpiry: action.payload.tokenExpiry,
+        refreshToken: action.payload.refreshToken,
+        user: action.payload.user,
+      };
+
+    case AUTH_ACTIONS.REFRESH_TOKEN_FAILURE:
+      return {
+        ...state,
+        isRefreshing: false,
+        error: action.payload,
+      };
+
     // Logout
     case AUTH_ACTIONS.LOGOUT_REQUEST:
       return {

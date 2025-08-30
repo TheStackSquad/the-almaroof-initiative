@@ -22,6 +22,11 @@ export const AUTH_ACTIONS = {
   CHECK_SESSION_SUCCESS: "auth/checkSessionSuccess",
   CHECK_SESSION_FAILURE: "auth/checkSessionFailure",
 
+  // Refresh token actions
+  REFRESH_TOKEN_REQUEST: "auth/refreshTokenRequest",
+  REFRESH_TOKEN_SUCCESS: "auth/refreshTokenSuccess",
+  REFRESH_TOKEN_FAILURE: "auth/refreshTokenFailure",
+
   // Profile Management
   GET_PROFILE_REQUEST: "auth/getProfileRequest",
   GET_PROFILE_SUCCESS: "auth/getProfileSuccess",
@@ -37,14 +42,10 @@ export const AUTH_ACTIONS = {
   LOGOUT_FAILURE: "auth/logoutFailure",
 
   // State Management
+  CLEAR_AUTH_STATE: "auth/clearAuthState",
   CLEAR_AUTH_ERRORS: "auth/clearAuthErrors",
   SET_AUTH_LOADING: "auth/setAuthLoading",
   RESET_AUTH_STATE: "auth/resetAuthState",
-
-  // Legacy Support (for existing requestPasscode)
-  REQUEST_PASSCODE_REQUEST: "auth/requestPasscodeRequest",
-  REQUEST_PASSCODE_SUCCESS: "auth/requestPasscodeSuccess",
-  REQUEST_PASSCODE_FAILURE: "auth/requestPasscodeFailure",
 };
 
 // API Endpoints
@@ -54,6 +55,7 @@ export const API_ENDPOINTS = {
   GOOGLE_AUTH: "/api/auth/google",
   GOOGLE_CALLBACK: "/api/auth/google/callback",
   VERIFY_SESSION: "/api/auth/verify",
+  REFRESH_TOKEN: "/api/auth/refresh",
   LOGOUT: "/api/auth/logout",
   PROFILE: "/api/auth/profile",
 };

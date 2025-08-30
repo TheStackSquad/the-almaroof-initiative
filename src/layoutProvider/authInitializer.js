@@ -4,58 +4,61 @@
 
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { checkSession } from "@/redux/action/authAction";
+import { checkSession, refreshToken } from "@/redux/action/authAction";
 
 export function AuthInitializer({ children }) {
   const dispatch = useDispatch();
 
-  // Get all necessary auth state values
-  const { sessionChecked, isSessionChecking, sessionError, token } =
-    useSelector((state) => state.auth);
+  // Get essential auth state values
+  const { sessionChecked, isSessionChecking, token, tokenExpiry } = useSelector(
+    (state) => state.auth
+  );
 
   // Check if Redux persist has completed rehydration
   const isRehydrated = useSelector((state) => state._persist?.rehydrated);
 
-  // Enhanced session check logic that handles various edge cases
+  // Session check logic - much cleaner
   useEffect(() => {
-    // Only proceed after rehydration is complete
+    // Wait for rehydration to complete
     if (!isRehydrated) return;
 
-    // Determine if we should check the session
-    const shouldCheckSession =
-      // Never checked before
-      !sessionChecked ||
-      // Previously checked but failed with an error and not currently checking
-      (sessionChecked && sessionError && !isSessionChecking) ||
-      // Has token but session not verified (edge case after direct token storage)
-      (token && !sessionChecked && !isSessionChecking);
-
-    if (shouldCheckSession) {
-      console.log("🔄 AuthInitializer: Starting session check", {
-        sessionChecked,
-        sessionError: !!sessionError,
-        hasToken: !!token,
-        isSessionChecking,
-      });
+    // Only check session if we haven't checked and aren't currently checking
+    if (!sessionChecked && !isSessionChecking) {
+      console.log("🔄 AuthInitializer: Starting session check");
       dispatch(checkSession());
-    } else {
-      console.log("🔍 AuthInitializer: Skipping session check", {
-        sessionChecked,
-        sessionError: !!sessionError,
-        hasToken: !!token,
-        isSessionChecking,
-      });
     }
-  }, [
-    isRehydrated,
-    sessionChecked,
-    sessionError,
-    isSessionChecking,
-    token,
-    dispatch,
-  ]);
+  }, [isRehydrated, sessionChecked, isSessionChecking, dispatch]);
 
-  // Show loading screen until rehydration is complete
+  // Token refresh logic - separate concern
+  useEffect(() => {
+    if (!isRehydrated || !token || !tokenExpiry) return;
+
+    // Calculate time until token expires
+    const expiryTime = new Date(tokenExpiry).getTime();
+    const currentTime = Date.now();
+    const timeUntilExpiry = expiryTime - currentTime;
+    const refreshThreshold = 5 * 60 * 1000; // 5 minutes before expiry
+
+    // If token expires soon, refresh it
+    if (timeUntilExpiry <= refreshThreshold && timeUntilExpiry > 0) {
+      console.log("🔄 AuthInitializer: Token expiring soon, refreshing...");
+      dispatch(refreshToken());
+      return;
+    }
+
+    // Set up automatic refresh timer
+    if (timeUntilExpiry > refreshThreshold) {
+      const refreshTimer = setTimeout(() => {
+        console.log("⏰ AuthInitializer: Auto-refreshing token");
+        dispatch(refreshToken());
+      }, timeUntilExpiry - refreshThreshold);
+
+      // Cleanup timer
+      return () => clearTimeout(refreshTimer);
+    }
+  }, [isRehydrated, token, tokenExpiry, dispatch]);
+
+  // Show loading screen only during initial rehydration
   if (!isRehydrated) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -69,6 +72,7 @@ export function AuthInitializer({ children }) {
     );
   }
 
-  // Render children once rehydration is complete
+  // Once rehydrated, render children immediately
+  // No more waiting for session checks
   return children;
 }

@@ -2,128 +2,214 @@
 
 "use client";
 
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useSelector, useDispatch } from "react-redux";
-import { checkSession } from "@/redux/action/authAction";
+import { useAuth } from "@/utils/auth/useAuth";
 import SignInPrompt from "./components/signInPrompt";
 
 function ProtectedRouteContent() {
   const router = useRouter();
-  const dispatch = useDispatch();
   const searchParams = useSearchParams();
 
-  // Get auth state and rehydration status
-  const authState = useSelector((state) => state.auth);
-  const isRehydrated = useSelector((state) => state._persist?.rehydrated);
+  // Enhanced auth hook with zero-flashing capabilities
+  const {
+    isReady,
+    isSecurelyAuthenticated,
+    shouldAutoRefresh,
+    errorContext,
+    hasError,
+    needsLogin,
+    user,
+    manualRefresh,
+  } = useAuth();
 
-  const { isAuthenticated, sessionChecked, sessionError, isSessionChecking } =
-    authState;
-
-  // Enhanced debugging with cleaner logs
-  useEffect(() => {
-    console.log("🔍 ProtectedRoute State:", {
-      isAuthenticated,
-      sessionChecked,
-      hasSessionError: !!sessionError,
-      isSessionChecking,
-      isRehydrated,
-      timestamp: new Date().toISOString().split("T")[1].split(".")[0], // Show only time
-    });
-  }, [
-    isAuthenticated,
-    sessionChecked,
-    sessionError,
-    isSessionChecking,
-    isRehydrated,
-  ]);
-
-  // Safe redirect URL extraction with fallback
-  const getRedirectUrl = () => {
+  // SECURITY: Safe redirect URL validation (government standard)
+  const getRedirectUrl = useCallback(() => {
     try {
       const redirectParam = searchParams?.get("redirect");
-      // Only allow relative URLs starting with '/' for security
+
+      // Strict validation for government app
       if (redirectParam?.startsWith("/")) {
-        return redirectParam;
+       const isAllowedPath = (path) => {
+         // Allow broader community and user areas
+         const allowedPrefixes = [
+           "/community/",
+           "/community/services",
+           "/community/online-services",
+         ];
+
+         // Block sensitive areas
+         const blockedPrefixes = ["/admin/", "/api/", "/debug/", "/internal/"];
+
+         return (
+           allowedPrefixes.some((prefix) => path.startsWith(prefix)) &&
+           !blockedPrefixes.some((prefix) => path.startsWith(prefix))
+         );
+       };
+
+        if (isAllowedPath) {
+          return redirectParam;
+        }
       }
+
+      // Fallback to safe default
       return "/community/services";
     } catch (e) {
-      console.warn("Error parsing redirect URL:", e);
+      console.warn("🚨 Security: Invalid redirect URL detected:", e);
       return "/community/services";
     }
-  };
+  }, [searchParams]);
 
   const safeRedirectUrl = getRedirectUrl();
 
-  // Auto-redirect authenticated users to their intended destination
+  // Enhanced debugging for government app
   useEffect(() => {
-    if (isAuthenticated && sessionChecked && isRehydrated) {
-      console.log("✅ Authenticated user - redirecting to:", safeRedirectUrl);
+    if (process.env.NODE_ENV === "development") {
+      console.log("🔐 ProtectedRoute Security Check:", {
+        isReady,
+        isSecurelyAuthenticated,
+        shouldAutoRefresh,
+        needsLogin,
+        hasError,
+        errorType: errorContext?.type,
+        userId: user?.id?.substring(0, 8) + "...", // Partial ID for debugging
+        timestamp: new Date().toISOString().split("T")[1].split(".")[0],
+      });
+    }
+  }, [
+    isReady,
+    isSecurelyAuthenticated,
+    shouldAutoRefresh,
+    needsLogin,
+    hasError,
+    errorContext,
+    user,
+  ]);
+
+  // SECURITY: Handle automatic redirect on successful authentication
+  useEffect(() => {
+    if (isReady && isSecurelyAuthenticated && !shouldAutoRefresh) {
+      console.log("✅ Security cleared - redirecting to:", safeRedirectUrl);
       router.push(safeRedirectUrl);
     }
-  }, [isAuthenticated, sessionChecked, isRehydrated, router, safeRedirectUrl]);
+  }, [
+    isReady,
+    isSecurelyAuthenticated,
+    shouldAutoRefresh,
+    router,
+    safeRedirectUrl,
+  ]);
 
-  // Handle retry for session errors
-  const handleRetry = () => {
-    console.log("🔄 Retrying session check...");
-    dispatch(checkSession());
-  };
+  // SECURITY: Handle token refresh retry
+  const handleRetry = useCallback(async () => {
+    if (!shouldAutoRefresh) return;
 
-  // Determine loading state - simplified logic
-  const isInitializing = !isRehydrated;
-  const isCheckingSession =
-    isSessionChecking || (!sessionChecked && !sessionError);
+    console.log("🔄 User requested auth retry");
+    try {
+      const result = await manualRefresh();
+      if (!result.success) {
+        console.error("🚨 Manual refresh failed:", result.error);
+      }
+    } catch (error) {
+      console.error("🚨 Token refresh failed in protected route:", error);
+    }
+  }, [shouldAutoRefresh, manualRefresh]);
 
-  // Show loading while initializing or checking session
-  if (isInitializing) {
-    return <GlobalLoader message="Initializing secure access..." />;
+  // ===== RENDER LOGIC - Zero Page Flashing =====
+
+  // 1. LOADING: Still determining auth state
+  if (!isReady) {
+    return <SecureLoader message="Initializing secure access..." />;
   }
 
-  if (isCheckingSession) {
-    return <GlobalLoader message="Verifying authentication..." />;
+  // 2. REFRESHING: Updating credentials automatically
+  if (shouldAutoRefresh) {
+    return <SecureLoader message="Updating security credentials..." />;
   }
 
-  // Handle unauthenticated users or session errors
-  if (!isAuthenticated || sessionError) {
-    console.log("🔐 Showing SignIn:", {
-      isAuthenticated,
-      hasSessionError: !!sessionError,
-    });
+  // 3. EXPIRED/NEEDS LOGIN: Clear authentication required
+  if (needsLogin) {
+    const isExpired = errorContext?.type === "expired";
+
+    console.log(
+      isExpired
+        ? "🚨 Security: Token expired - requiring re-authentication"
+        : "🔐 Security: Authentication required"
+    );
 
     return (
       <SignInPrompt
         redirectUrl={safeRedirectUrl}
-        hasError={!!sessionError}
-        error={sessionError ? { message: sessionError } : null}
-        onRetry={sessionError ? handleRetry : undefined}
+        hasError={isExpired || hasError}
+        error={errorContext ? { message: errorContext.message } : null}
+        onRetry={errorContext?.recoverable ? handleRetry : undefined}
+        securityLevel={isExpired ? "high" : "standard"}
       />
     );
   }
 
-  // Authenticated users should have been redirected by the useEffect above
-  // This is a fallback that shows loading while redirect happens
-  console.log("🔄 Authenticated - redirect in progress");
-  return <GlobalLoader message="Redirecting to secure area..." />;
+  // 4. ERROR STATE: Something went wrong
+  if (hasError && !isSecurelyAuthenticated) {
+    console.log("🔐 Security: Authentication error");
+
+    return (
+      <SignInPrompt
+        redirectUrl={safeRedirectUrl}
+        hasError={true}
+        error={{ message: errorContext.message }}
+        onRetry={errorContext.recoverable ? handleRetry : undefined}
+        securityLevel="standard"
+      />
+    );
+  }
+
+  // 5. AUTHENTICATED: Show loading while redirect processes
+  if (isSecurelyAuthenticated) {
+    return <SecureLoader message="Accessing secure area..." />;
+  }
+
+  // 6. FALLBACK: Unknown state - secure by default
+  console.warn("🚨 Unknown authentication state - defaulting to secure");
+  return (
+    <SignInPrompt
+      redirectUrl={safeRedirectUrl}
+      hasError={true}
+      error={{ message: "Authentication status unclear. Please sign in." }}
+      securityLevel="high"
+    />
+  );
 }
 
-// Consistent loading component with proper styling
-function GlobalLoader({ message = "Loading..." }) {
+// Government-grade loading component with security messaging
+function SecureLoader({ message = "Loading..." }) {
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="text-center">
-        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">
+      <div className="text-center max-w-md">
+        <div className="relative">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="absolute top-0 left-1/2 transform -translate-x-1/2">
+            <div className="w-12 h-12 border-4 border-blue-200 border-t-transparent rounded-full animate-spin animate-reverse"></div>
+          </div>
+        </div>
+        <p className="text-gray-700 dark:text-gray-300 text-sm font-medium mb-2">
           {message}
+        </p>
+        <p className="text-gray-500 dark:text-gray-400 text-xs">
+          🔒 Secure Government Portal
         </p>
       </div>
     </div>
   );
 }
 
-// Main component with Suspense boundary for useSearchParams
+// Main component with enhanced error boundary
 export default function ProtectedRoutePage() {
   return (
-    <Suspense fallback={<GlobalLoader message="Loading secure access..." />}>
+    <Suspense
+      fallback={
+        <SecureLoader message="Loading secure authentication system..." />
+      }
+    >
       <ProtectedRouteContent />
     </Suspense>
   );

@@ -19,7 +19,7 @@ const LogoutButton = ({
       await dispatch(logoutUser()).unwrap();
 
       // Redirect to login page after successful logout
-      router.push("/api/auth/signin");
+      router.push("/api/auth-entry");
 
       // Optional: Show success message
       console.log("Logged out successfully");
@@ -28,7 +28,7 @@ const LogoutButton = ({
       // Even if API fails, we should clear local storage and redirect
       localStorage.removeItem("auth_token");
       localStorage.removeItem("user_data");
-      router.push("/api/auth/signin");
+      router.push("/api/auth-entry");
     }
   };
 
@@ -107,12 +107,12 @@ export const LogoutDropdownItem = () => {
   const handleLogout = async () => {
     try {
       await dispatch(logoutUser()).unwrap();
-      router.push("/auth/signin");
+      router.push("/auth-entry");
     } catch (error) {
       // Fallback cleanup
       localStorage.removeItem("auth_token");
       localStorage.removeItem("user_data");
-      router.push("/auth/signin");
+      router.push("/auth-entry");
     }
   };
 

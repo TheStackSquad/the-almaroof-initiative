@@ -4,7 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { NavDropdown } from "@/utils/hooks/navDropdown";
-import ThemeToggle from "./themeToggle";
+// import ThemeToggle from "./themeToggle";
 
 export default function DesktopNav({
   navItems,
@@ -16,8 +16,8 @@ export default function DesktopNav({
   toggleCommunity,
   closeCommunity,
   communityDropdownRef,
-  theme,
-  toggleTheme,
+  // theme,
+  // toggleTheme,
 }) {
   const renderDesktopNavItem = (item) => {
     const isDropdownOpen =
