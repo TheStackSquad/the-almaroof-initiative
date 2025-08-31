@@ -85,18 +85,14 @@ export const signinUser = (credentials) => async (dispatch) => {
     const response = await api.post(API_ENDPOINTS.SIGNIN, credentials);
     const { user, token, message } = response.data;
 
-    // Store auth data
-    localStorage.setItem("auth_token", token);
-    localStorage.setItem("user_data", JSON.stringify(user));
-
     dispatch({
       type: AUTH_ACTIONS.SIGNIN_SUCCESS,
       payload: {
         user,
-        token,
         message,
         authProvider: "traditional",
         lastLoginAt: new Date().toISOString(),
+        tokenExpiry: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
       },
     });
 
@@ -214,18 +210,12 @@ export const checkSession = () => async (dispatch, getState) => {
 
 // Token refresh functionality
 export const refreshToken = () => async (dispatch, getState) => {
-  const { isRefreshing, token } = getState().auth;
+  const { isRefreshing } = getState().auth;
   
   // Prevent multiple refresh attempts
   if (isRefreshing) {
     console.log("🔄 Token refresh already in progress, skipping...");
-    return;
-  }
-
-  // Must have a token to refresh
-  if (!token) {
-    console.log("❌ No token available for refresh");
-    return;
+    return { success: false, error: "Refresh in progress" };
   }
 
   dispatch({ type: AUTH_ACTIONS.REFRESH_TOKEN_REQUEST });
@@ -233,24 +223,25 @@ export const refreshToken = () => async (dispatch, getState) => {
   try {
     console.log("🔄 Refreshing token...");
 
-    // Call your refresh endpoint
-    const response = await api.post(API_ENDPOINTS.REFRESH_TOKEN);
+    // Step 1: Call refresh endpoint. The refresh token should be in an HttpOnly cookie.
+    const response = await api.post(API_ENDPOINTS.REFRESH_TOKEN); // Cookie is sent automatically
     const { 
       user, 
       token: newToken, 
       tokenExpiry, 
-      refreshToken: newRefreshToken 
+      // refreshToken: newRefreshToken // Only needed if using rotating refresh tokens
     } = response.data;
 
     console.log("✅ Token refreshed successfully");
 
+    // Step 2: Update client state with the new access token
     dispatch({
       type: AUTH_ACTIONS.REFRESH_TOKEN_SUCCESS,
       payload: {
         user,
         token: newToken,
         tokenExpiry,
-        refreshToken: newRefreshToken,
+        // refreshToken: newRefreshToken, 
       },
     });
 
@@ -272,6 +263,7 @@ export const refreshToken = () => async (dispatch, getState) => {
     return { success: false, error: errorMessage };
   }
 };
+
 /**
  * Get User Profile Action
  */
@@ -350,11 +342,15 @@ export const logoutUser = () => async (dispatch) => {
     // Clear server-side session (HttpOnly cookie)
     await api.post(API_ENDPOINTS.LOGOUT);
   } catch (error) {
-    console.warn("Logout API call failed:", error);
+    console.warn("Logout API call failed, proceeding with client-side cleanup:", error);
+    // Even if the API call fails, we must clear the client state.
   } finally {
-    // Clear client storage
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("user_data");
+    // Step 3: CRITICAL - Remove token from localStorage if it exists, but it shouldn't!
+    // This is a cleanup step for an incorrect implementation.
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("user_data");
+    }
 
     // Dispatch success - this should reset the auth state
     dispatch({
@@ -363,7 +359,6 @@ export const logoutUser = () => async (dispatch) => {
     });
   }
 };
-
 
 // Clear auth errors
 export const clearAuthErrors = () => ({

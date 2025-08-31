@@ -3,25 +3,33 @@
 "use client";
 
 import { useSelector, useDispatch } from "react-redux";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { logoutUser, refreshToken } from "@/redux/action/authAction";
 
-// Utility functions for token management
-const shouldRefreshToken = (tokenExpiry) => {
-  if (!tokenExpiry) return false;
-  const timeUntilExpiry = new Date(tokenExpiry).getTime() - Date.now();
-  return timeUntilExpiry <= 15 * 60 * 1000; // 15 minutes buffer
-};
+// Import utilities from split files
+import {
+  shouldRefreshToken,
+  isTokenExpired,
+  getTokenTimeRemaining,
+  validateTokenStructure,
+} from "@/utils/auth/tokenUtils";
 
-const isTokenExpired = (tokenExpiry) => {
-  if (!tokenExpiry) return false;
-  return new Date(tokenExpiry).getTime() <= Date.now();
-};
+import { RefreshManager, createRouteProtector } from "./authHelpers";
+
+import { logSecurityEvent } from "./securityLogger";
+
+import { SECURITY_THRESHOLDS, ERROR_TYPES } from "./authTypes";
 
 export function useAuth() {
   const dispatch = useDispatch();
   const router = useRouter();
+
+  // Initialize managers (singleton pattern)
+  const refreshManagerRef = useRef(null);
+  if (!refreshManagerRef.current) {
+    refreshManagerRef.current = new RefreshManager();
+  }
 
   // Get auth state from Redux - single source of truth
   const authState = useSelector((state) => state.auth);
@@ -45,30 +53,19 @@ export function useAuth() {
   const computedState = useMemo(() => {
     const expired = tokenExpiry ? isTokenExpired(tokenExpiry) : false;
     const needsRefresh = tokenExpiry ? shouldRefreshToken(tokenExpiry) : false;
+    const timeUntilRefresh =
+      getTokenTimeRemaining(tokenExpiry) - SECURITY_THRESHOLDS.REFRESH_BUFFER;
 
-    // Calculate time until refresh needed (for UI display)
-    const timeUntilRefresh = tokenExpiry
-      ? Math.max(
-          0,
-          new Date(tokenExpiry).getTime() - Date.now() - 15 * 60 * 1000
-        )
-      : 0;
-
-    // Determine if we're truly ready (no more loading states)
     const isReady =
       isRehydrated && sessionChecked && !isLoading && !isSessionChecking;
-
-    // Enhanced authentication state that accounts for expiry
     const isSecurelyAuthenticated = isAuthenticated && !expired && isReady;
-
-    // Unified loading state
     const loading =
       !isRehydrated || isLoading || isSessionChecking || isRefreshing;
 
     return {
       expired,
       needsRefresh,
-      timeUntilRefresh,
+      timeUntilRefresh: Math.max(0, timeUntilRefresh),
       isReady,
       isSecurelyAuthenticated,
       loading,
@@ -83,126 +80,167 @@ export function useAuth() {
     isAuthenticated,
   ]);
 
-  // Enhanced error context
+  // Enhanced error context with categorization
   const errorContext = useMemo(() => {
     if (!error && !computedState.expired) return null;
 
+    let errorType = ERROR_TYPES.SERVER;
+    let recoverable = true;
+
+    if (computedState.expired) {
+      errorType = ERROR_TYPES.EXPIRED;
+      recoverable = false;
+    } else if (error?.message?.includes("network")) {
+      errorType = ERROR_TYPES.NETWORK;
+    } else if (error?.message?.includes("rate limit")) {
+      errorType = ERROR_TYPES.RATE_LIMITED;
+    } else if (error?.message?.includes("invalid")) {
+      errorType = ERROR_TYPES.INVALID;
+      recoverable = false;
+    }
+
+    const refreshMetrics = refreshManagerRef.current.getMetrics();
+    if (refreshMetrics.isSuspicious) {
+      errorType = ERROR_TYPES.SUSPICIOUS;
+      recoverable = false;
+      logSecurityEvent("suspicious_activity_detected", {
+        failureCount: refreshMetrics.failureCount,
+        userId: user?.id,
+      });
+    }
+
     return {
-      type: error?.type || (computedState.expired ? "expired" : "unknown"),
+      type: errorType,
       message:
         error?.message ||
         (computedState.expired ? "Session expired" : "Authentication error"),
-      recoverable: !computedState.expired, // Expired sessions need fresh login
+      recoverable,
       timestamp: Date.now(),
+      retryAfter: errorType === ERROR_TYPES.RATE_LIMITED ? 60000 : null,
     };
-  }, [error, computedState.expired]);
+  }, [error, computedState.expired, user?.id]);
 
-  // Memoized logout function
+  // Race condition protected refresh function
+  const protectedRefresh = useCallback(async () => {
+    const refreshFunction = () => dispatch(refreshToken());
+    return await refreshManagerRef.current.executeRefresh(
+      refreshFunction,
+      user?.id
+    );
+  }, [dispatch, user?.id]);
+
+  // Memoized logout function with enhanced security
   const logout = useCallback(
-    async (redirectPath = "/") => {
+    async (redirectPath = "/", reason = "user_initiated") => {
       try {
+        // Clear refresh manager state
+        refreshManagerRef.current.reset();
+
+        logSecurityEvent("user_logout", {
+          reason,
+          userId: user?.id,
+          sessionDuration: user?.loginTime
+            ? Date.now() - new Date(user.loginTime).getTime()
+            : null,
+        });
+
         await dispatch(logoutUser());
+
         if (typeof window !== "undefined") {
           router.push(redirectPath);
         }
         return { success: true };
       } catch (error) {
+        logSecurityEvent("logout_failed", {
+          error: error.message,
+          userId: user?.id,
+        });
         console.error("Logout failed:", error);
         return { success: false, error: error.message };
       }
     },
-    [dispatch, router]
+    [dispatch, router, user?.id, user?.loginTime]
   );
 
-  // Enhanced manual refresh with error handling
-  const manualRefresh = useCallback(async () => {
-    // Prevent refresh if already refreshing or no token to refresh
-    if (isRefreshing) {
-      return { success: false, error: "Refresh already in progress" };
+  // Enhanced session validation
+  const validateSession = useCallback(() => {
+    const now = Date.now();
+    const tokenValid = tokenExpiry && new Date(tokenExpiry).getTime() > now;
+    const sessionValid =
+      authState.sessionExpiry && authState.sessionExpiry > now;
+
+    const validation = {
+      isValid: tokenValid && sessionValid && isAuthenticated,
+      tokenValid,
+      sessionValid,
+      needsRefresh: shouldRefreshToken(tokenExpiry),
+      expired: isTokenExpired(tokenExpiry),
+    };
+
+    if (!validation.isValid) {
+      logSecurityEvent("session_validation_failed", {
+        validation,
+        userId: user?.id,
+      });
     }
 
-    if (!tokenExpiry) {
-      return { success: false, error: "No token available to refresh" };
-    }
+    return validation;
+  }, [tokenExpiry, authState.sessionExpiry, isAuthenticated, user?.id]);
 
-    if (computedState.expired) {
-      return { success: false, error: "Token expired, login required" };
-    }
+  // Force logout for security reasons
+  const forceLogout = useCallback(
+    async (reason = "security_violation") => {
+      const metrics = refreshManagerRef.current.getMetrics();
+      logSecurityEvent("forced_logout", {
+        reason,
+        securityMetrics: metrics,
+        userId: user?.id,
+      });
 
-    try {
-      const result = await dispatch(refreshToken());
-      return result || { success: true };
-    } catch (error) {
-      console.error("Token refresh failed:", error);
-      return { success: false, error: error.message || "Token refresh failed" };
-    }
-  }, [dispatch, isRefreshing, tokenExpiry, computedState.expired]);
-
-  // Route protection helper - non-breaking addition
-  const requireAuth = useCallback(
-    (options = {}) => {
-      const {
-        redirectTo = "/login",
-        checkSession = true,
-        returnUrl = true,
-      } = options;
-
-      // Still loading - let component decide how to handle
-      if (!computedState.isReady) {
-        return { authorized: null, loading: true };
-      }
-
-      // Check session validity if requested
-      const sessionValid =
-        !checkSession ||
-        (authState.sessionExpiry && authState.sessionExpiry > Date.now());
-
-      if (!computedState.isSecurelyAuthenticated || !sessionValid) {
-        // Prepare redirect URL with return path
-        const currentPath =
-          typeof window !== "undefined" ? window.location.pathname : "";
-        const redirectUrl =
-          returnUrl && currentPath !== redirectTo
-            ? `${redirectTo}?from=${encodeURIComponent(currentPath)}`
-            : redirectTo;
-
-        return {
-          authorized: false,
-          redirectUrl,
-          reason: computedState.expired ? "expired" : "unauthenticated",
-        };
-      }
-
-      return { authorized: true };
+      return await logout("/auth/signin?forced=true", reason);
     },
-    [
-      computedState.isReady,
-      computedState.isSecurelyAuthenticated,
-      computedState.expired,
-      authState.sessionExpiry,
-    ]
+    [logout, user?.id]
   );
 
-  // Auto-refresh trigger (non-breaking enhancement)
+  // Create route protector with current auth context
+  const requireAuth = useMemo(() => {
+    return createRouteProtector({
+      isReady: computedState.isReady,
+      isSecurelyAuthenticated: computedState.isSecurelyAuthenticated,
+      expired: computedState.expired,
+      sessionExpiry: authState.sessionExpiry,
+      user,
+    });
+  }, [computedState, authState.sessionExpiry, user]);
+
+  // Security metrics
+  const securityMetrics = useMemo(() => {
+    const refreshMetrics = refreshManagerRef.current.getMetrics();
+    return {
+      ...refreshMetrics,
+      securityLevel: refreshMetrics.isSuspicious ? "HIGH_RISK" : "NORMAL",
+      isHighRisk: refreshMetrics.isSuspicious,
+    };
+  }, []);
+
+  // Auto-refresh trigger
   const shouldAutoRefresh = useMemo(() => {
+    const refreshMetrics = refreshManagerRef.current.getMetrics();
     return (
       computedState.needsRefresh &&
       !isRefreshing &&
       !computedState.expired &&
-      computedState.isReady
+      computedState.isReady &&
+      !refreshMetrics.isRateLimited &&
+      !refreshMetrics.isSuspicious
     );
-  }, [
-    computedState.needsRefresh,
-    isRefreshing,
-    computedState.expired,
-    computedState.isReady,
-  ]);
+  }, [computedState, isRefreshing]);
 
   return {
     // ===== ORIGINAL API (zero breaking changes) =====
     user,
-    isAuthenticated: computedState.isSecurelyAuthenticated, // Enhanced but same interface
-    isLoading: computedState.loading, // Unified loading state
+    isAuthenticated: computedState.isSecurelyAuthenticated,
+    isLoading: computedState.loading,
     isRefreshing,
     error,
     authProvider,
@@ -211,32 +249,34 @@ export function useAuth() {
     expired: computedState.expired,
     timeUntilRefresh: computedState.timeUntilRefresh,
     logout,
-    manualRefresh,
+    manualRefresh: protectedRefresh, // Now uses protected version
     isGoogleAuth: authProvider === "google",
     isTraditionalAuth: authProvider === "traditional",
 
     // ===== ENHANCED API (new additions) =====
-    // Reliability enhancements
-    isReady: computedState.isReady, // True when we definitively know auth status
-    isSecurelyAuthenticated: computedState.isSecurelyAuthenticated, // Explicit secure state
-
-    // Error enhancements
-    errorContext, // Rich error information
+    isReady: computedState.isReady,
+    isSecurelyAuthenticated: computedState.isSecurelyAuthenticated,
+    errorContext,
     hasError: !!errorContext,
-
-    // Route protection
-    requireAuth, // Helper for protected routes
-
-    // Auto-refresh indicators
-    shouldAutoRefresh, // Whether auto-refresh should trigger
-
-    // System state
-    isRehydrated, // Redux persistence status
-    sessionChecked, // Whether initial session check completed
-
-    // Utility methods
-    canRefresh: !isRefreshing && !computedState.expired && !!tokenExpiry,
+    requireAuth,
+    shouldAutoRefresh,
+    protectedRefresh,
+    securityMetrics,
+    validateSession,
+    forceLogout,
+    isRehydrated,
+    sessionChecked,
+    canRefresh:
+      !isRefreshing &&
+      !computedState.expired &&
+      !!tokenExpiry &&
+      !securityMetrics.isRateLimited,
     needsLogin:
       computedState.expired || (!isAuthenticated && computedState.isReady),
+    isHighRisk: securityMetrics.isHighRisk,
+    refreshAttemptsRemaining: Math.max(
+      0,
+      SECURITY_THRESHOLDS.MAX_REFRESH_ATTEMPTS - securityMetrics.attemptCount
+    ),
   };
 }

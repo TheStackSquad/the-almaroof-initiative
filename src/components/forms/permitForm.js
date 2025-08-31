@@ -1,11 +1,11 @@
 // src/components/forms/permitForm.js
-
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+import { useAuth } from "@/utils/auth/useAuth";
 
 // Utils and configs
 import validatePermitForm from "@/utils/validate/validatePermitForm";
@@ -43,6 +43,7 @@ import {
 export default function PermitForm({ permitType = "business-permit" }) {
   const router = useRouter();
   const dispatch = useDispatch();
+  const { requireAuth } = useAuth(); // Use the auth hook
 
   // Memoized selectors for performance
   const authState = useSelector(selectAuthState);
@@ -50,8 +51,6 @@ export default function PermitForm({ permitType = "business-permit" }) {
   const userEmail = useSelector(selectUserEmail);
   const userPhone = useSelector(selectUserPhone);
   const userName = useSelector(selectUserName);
-
-  console.log("auth state:", authState);
 
   // State management
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -68,20 +67,18 @@ export default function PermitForm({ permitType = "business-permit" }) {
     amount: 0,
   }));
 
-  // Memoized computed values
-  const isFormReady = useMemo(
-    () => authState.isAuthenticated && authState.sessionChecked,
-    [authState.isAuthenticated, authState.sessionChecked]
-  );
+  // Authentication check
+  useEffect(() => {
+    const authCheck = requireAuth({
+      redirectTo: "/auth/signin",
+      checkSession: true,
+      returnUrl: true,
+    });
 
-  const canSubmit = useMemo(
-    () =>
-      !loading &&
-      isFormReady &&
-      formData.application_type &&
-      formData.amount > 0,
-    [loading, isFormReady, formData.application_type, formData.amount]
-  );
+    if (authCheck.authorized === false && authCheck.redirectUrl) {
+      router.push(authCheck.redirectUrl);
+    }
+  }, [requireAuth, router]);
 
   // Auto-fill form when user data is available
   useEffect(() => {
@@ -154,13 +151,19 @@ export default function PermitForm({ permitType = "business-permit" }) {
       setLoading(true);
 
       try {
-        // Form validation...
+        // Validate form first
+        const formErrors = validatePermitForm(formData);
+        if (Object.keys(formErrors).length > 0) {
+          setErrors(formErrors);
+          showToast("Please fix the errors in the form", "error");
+          setLoading(false);
+          return;
+        }
 
         const result = await onSubmitPermitForm(formData, authState);
-        console.log("Result received from onSubmitPermitForm:", result);
 
         if (result.requiresAuth) {
-          router.push("/login");
+          router.push("/auth-entry");
           return;
         }
 
@@ -170,27 +173,22 @@ export default function PermitForm({ permitType = "business-permit" }) {
           return;
         }
 
-        // ------------------------------------
-        // START: RECOMMENDED UPDATE
-        // First, show the success toast
-        showToast("Permit application submitted!", "success");
-
-        // Then, redirect to the payment URL
+        // Redirect to payment first
         if (result.data?.payment_url) {
           router.push(result.data.payment_url);
         } else {
-          // Fallback or a path without payment
-          // You can clear the form here if there's no payment URL
-          setFormData((prevData) => ({
-            ...prevData,
+          // If no payment needed, show success
+          showToast("Permit application submitted!", "success");
+          setFormData((prev) => ({
+            ...prev,
             permit_type: "",
             application_type: "",
           }));
         }
-        // END: RECOMMENDED UPDATE
-        // ------------------------------------
       } catch (error) {
-        // ... (Error handling)
+        console.error("Submission error:", error);
+        setErrors({ submit: error.message });
+        showToast("An unexpected error occurred", "error");
       } finally {
         setLoading(false);
       }
@@ -204,13 +202,12 @@ export default function PermitForm({ permitType = "business-permit" }) {
     router.push("/community/online-services");
   }, [router]);
 
-  // Unified loading and authentication check
-  if (authState.loading || !isFormReady) {
+  // Simplified loading logic
+  if (authState.loading || !authState.sessionChecked) {
     return <LoadingState type="authentication" />;
   }
 
-  // Fallback if session check completed but user is not authenticated
-  if (!authState.isAuthenticated && authState.sessionChecked) {
+  if (!authState.isAuthenticated) {
     return <AuthRequiredState onSignIn={() => router.push("/auth/signin")} />;
   }
 
@@ -241,8 +238,10 @@ export default function PermitForm({ permitType = "business-permit" }) {
             formData={formData}
             errors={errors}
             loading={loading}
-            isFormReady={isFormReady}
-            canSubmit={canSubmit}
+            isFormReady={authState.isAuthenticated}
+            canSubmit={
+              !loading && formData.application_type && formData.amount > 0
+            }
             onChange={handleChange}
             onTypeChange={handleTypeChange}
             onSubmit={handleSubmit}
