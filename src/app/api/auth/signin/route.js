@@ -128,6 +128,7 @@ export async function POST(request) {
       {
         message: "Signed in successfully!",
         user: userData,
+        tokenExpiry: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
       },
       { status: 200 }
     );

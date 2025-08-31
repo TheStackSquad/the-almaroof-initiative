@@ -1,20 +1,14 @@
-// src/lib/authService/token.js
 import { SignJWT } from "jose";
 
+// Step 1: Define JWT and refresh token secrets.
 const secretKey =
   process.env.JWT_SECRET ||
   "your-very-strong-and-secure-default-secret-key-that-is-at-least-256-bits";
+const refreshSecretKey = process.env.JWT_REFRESH_SECRET;
 const key = new TextEncoder().encode(secretKey);
 
-/**
- * Generates a secure JSON Web Token (JWT) for a user.
- * The token contains essential, non-sensitive user data to enable
- * quick authentication checks without a database lookup.
- *
- * @param {object} user - The user object from the database.
- * @returns {Promise<string>} A promise that resolves to the signed JWT.
- */
 export async function generateAuthToken(user) {
+  // Step 2: Validate user object for required properties.
   if (!user || !user.id || !user.email) {
     throw new Error(
       "User object is missing required properties for token generation."
@@ -22,36 +16,58 @@ export async function generateAuthToken(user) {
   }
 
   try {
-    // Define the token's payload with essential, non-sensitive data
-    // It's crucial to include all necessary data for session checks here.
+    // Step 3: Define the token's payload with essential user data.
     const payload = {
       userId: user.id,
       email: user.email,
-      username: user.username, // <-- ADDED: Include the username in the JWT payload
-      phone: user.phone, // <-- ADDED: Include the phone number for consistency
+      username: user.username,
+      phone: user.phone,
       isVerified: user.is_verified,
-      // Add other non-sensitive data as needed
     };
-      console.log("unvieling payload:", payload);
+    console.log("unvieling payload:", payload);
 
-    // Create and sign the JWT using the jose library
+    // Step 4: Create and sign the JWT.
     const jwt = await new SignJWT(payload)
-      // Set the protected header with the signing algorithm
       .setProtectedHeader({ alg: "HS256" })
-      // Set the token's issuer (e.g., your application's domain)
       .setIssuer("urn:your-app:issuer")
-      // Set the token's audience (e.g., your API endpoint)
       .setAudience("urn:your-app:audience")
-      // Set the issue date
       .setIssuedAt()
-      // Set the token's expiration time (e.g., 2 hours)
       .setExpirationTime("2h")
-      // Sign the token with the secret key
       .sign(key);
 
     return jwt;
   } catch (error) {
     console.error("🚨 Error generating authentication token:", error);
     throw new Error("Failed to generate authentication token.");
+  }
+}
+
+
+export async function generateRefreshToken(user) {
+  // Step 5: Validate user ID for refresh token generation.
+  if (!user || !user.id) {
+    throw new Error("User ID is required to generate a refresh token.");
+  }
+
+  try {
+    // Step 6: Define a minimal payload for the refresh token.
+    const payload = {
+      userId: user.id,
+    };
+
+    // Step 7: Create and sign the refresh token.
+    const refreshKey = new TextEncoder().encode(refreshSecretKey);
+    const refreshJwt = await new SignJWT(payload)
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuer("urn:your-app:issuer")
+      .setAudience("urn:your-app:audience:refresh")
+      .setIssuedAt()
+      .setExpirationTime("7d")
+      .sign(refreshKey);
+
+    return refreshJwt;
+  } catch (error) {
+    console.error("🚨 Error generating refresh token:", error);
+    throw new Error("Failed to generate refresh token.");
   }
 }

@@ -1,9 +1,11 @@
 // src/app/api/paystack/verify/route.js
 import { NextResponse } from "next/server";
+import { headers } from "next/headers"; // Step 1: Import headers for IP detection
 import { supabaseAdmin } from "@/utils/supabase/supabaseAdmin";
 import crypto from "crypto";
+import rateLimit from "@/utils/rate-limit";
 
-// Environment validation
+// Step 2: Environment validation
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const WEBHOOK_SECRET =
   process.env.PAYSTACK_WEBHOOK_SECRET || PAYSTACK_SECRET_KEY;
@@ -12,37 +14,13 @@ if (!PAYSTACK_SECRET_KEY) {
   throw new Error("PAYSTACK_SECRET_KEY environment variable is required");
 }
 
-// Rate limiting store (use Redis in production)
-const requestCounts = new Map();
-const RATE_LIMIT_WINDOW = 60000; // 1 minute
-const RATE_LIMIT_MAX_REQUESTS = 10; // 10 requests per minute
+// Step 3: Initialize the rate limiter
+const limiter = rateLimit({
+  interval: 60 * 1000, // 1 minute
+  uniqueTokenPerInterval: 500, // Max 500 users per minute
+});
 
-// Rate limiting middleware
-function checkRateLimit(identifier) {
-  const now = Date.now();
-  const windowStart = now - RATE_LIMIT_WINDOW;
-
-  // Clean old entries
-  for (const [key, value] of requestCounts.entries()) {
-    if (value.timestamp < windowStart) {
-      requestCounts.delete(key);
-    }
-  }
-
-  const current = requestCounts.get(identifier) || { count: 0, timestamp: now };
-
-  if (current.timestamp < windowStart) {
-    current.count = 1;
-    current.timestamp = now;
-  } else {
-    current.count++;
-  }
-
-  requestCounts.set(identifier, current);
-  return current.count <= RATE_LIMIT_MAX_REQUESTS;
-}
-
-// Retry mechanism for database operations
+// Step 4: Retry mechanism for database operations
 async function retryDatabaseOperation(operation, maxRetries = 3) {
   for (let i = 0; i < maxRetries; i++) {
     try {
@@ -55,7 +33,7 @@ async function retryDatabaseOperation(operation, maxRetries = 3) {
   }
 }
 
-// Validate metadata structure
+// Step 5: Validate metadata structure
 function validateMetadata(metadata) {
   if (!metadata || typeof metadata !== "object") {
     return { isValid: false, error: "Missing metadata" };
@@ -77,22 +55,26 @@ function validateMetadata(metadata) {
   return { isValid: true };
 }
 
-// Convert amount from kobo to naira consistently
+// Step 6: Convert amount from kobo to naira consistently
 function convertAmount(amountInKobo) {
   return Math.round(amountInKobo) / 100;
 }
 
 // GET handler for browser redirects from Paystack
 export async function GET(req) {
+  // Step 7: Get client IP for rate limiting
+  const headersList = headers();
   const clientIP =
-    req.headers.get("x-forwarded-for") ||
-    req.headers.get("x-real-ip") ||
+    headersList.get("x-forwarded-for") ||
+    headersList.get("x-real-ip") ||
     "unknown";
 
   try {
-    // Rate limiting
-    if (!checkRateLimit(clientIP)) {
-      console.warn(`Rate limit exceeded for IP: ${clientIP}`);
+    // Step 8: Apply Rate Limiting using the imported utility
+    try {
+      await limiter.check(10, clientIP); // Allow 10 requests per minute per IP for the GET handler
+    } catch (rateLimitError) {
+      console.warn(`🚨 Rate limit exceeded for IP: ${clientIP}`);
       return NextResponse.json(
         {
           status: "error",
@@ -102,7 +84,7 @@ export async function GET(req) {
       );
     }
 
-    // Extract and validate reference
+    // Step 9: Extract and validate reference
     const searchParams = new URL(req.url).searchParams;
     const reference = searchParams.get("reference");
 
@@ -120,7 +102,7 @@ export async function GET(req) {
 
     console.log(`🔍 GET verification started for reference: ${reference}`);
 
-    // Check if transaction was already processed (prevent duplicate processing)
+    // Step 10: Check if transaction was already processed (prevent duplicate processing)
     const { data: existingTransaction } = await supabaseAdmin
       .from("permits")
       .select("id, status, reference")
@@ -136,18 +118,34 @@ export async function GET(req) {
       });
     }
 
-    // Verify transaction with Paystack
-    const paystackResponse = await fetch(
-      `https://api.paystack.co/transaction/verify/${reference}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
-          "Content-Type": "application/json",
-        },
-        timeout: 30000, // 30 second timeout
+    // Step 11: Verify transaction with Paystack (with proper timeout)
+    const controller = new AbortController(); // Step 11a: Create AbortController
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // Step 11b: Set 30s timeout
+
+    let paystackResponse;
+    try {
+      paystackResponse = await fetch(
+        `https://api.paystack.co/transaction/verify/${reference}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+            "Content-Type": "application/json",
+          },
+          signal: controller.signal, // Step 11c: Pass the abort signal
+        }
+      );
+      clearTimeout(timeoutId); // Step 11d: Clear the timeout if request completes
+    } catch (error) {
+      if (error.name === "AbortError") {
+        console.error("❌ Paystack verification request timed out");
+        return NextResponse.json(
+          { status: "error", message: "Payment verification timed out." },
+          { status: 504 }
+        );
       }
-    );
+      throw error; // Re-throw other errors
+    }
 
     if (!paystackResponse.ok) {
       console.error(
@@ -182,7 +180,7 @@ export async function GET(req) {
       customer,
     } = transactionData;
 
-    // Validate transaction status
+    // Step 12: Validate transaction status
     if (transactionStatus !== "success") {
       console.error(
         `❌ Payment failed for reference: ${reference}. Status: ${transactionStatus}`
@@ -197,7 +195,7 @@ export async function GET(req) {
       );
     }
 
-    // Validate metadata
+    // Step 13: Validate metadata
     const metadataValidation = validateMetadata(metadata);
     if (!metadataValidation.isValid) {
       console.error(
@@ -216,7 +214,7 @@ export async function GET(req) {
       `✅ Payment verified for permit ${permit_id}, amount: ₦${amountInNaira}`
     );
 
-    // Update permit status with retry mechanism
+    // Step 14: Update permit status with retry mechanism
     const updateResult = await retryDatabaseOperation(async () => {
       const { data: updatedPermit, error } = await supabaseAdmin
         .from("permits")
@@ -248,7 +246,7 @@ export async function GET(req) {
 
     console.log(`✅ Permit ${permit_id} successfully updated to 'paid' status`);
 
-    // Return success response
+    // Step 15: Return success response
     return NextResponse.json({
       status: "success",
       message: "Payment verified successfully",
@@ -271,15 +269,20 @@ export async function GET(req) {
 
 // POST handler for Paystack webhooks
 export async function POST(req) {
+  // Step 16: Get client IP for webhook rate limiting
+  const headersList = headers();
   const clientIP =
-    req.headers.get("x-forwarded-for") ||
-    req.headers.get("x-real-ip") ||
+    headersList.get("x-forwarded-for") ||
+    headersList.get("x-real-ip") ||
     "unknown";
+  const identifier = `webhook_${clientIP}`;
 
   try {
-    // Rate limiting for webhooks
-    if (!checkRateLimit(`webhook_${clientIP}`)) {
-      console.warn(`Webhook rate limit exceeded for IP: ${clientIP}`);
+    // Step 17: Apply Rate Limiting for webhooks using the imported utility
+    try {
+      await limiter.check(50, identifier); // Allow 50 requests per minute per IP for webhooks
+    } catch (rateLimitError) {
+      console.warn(`🚨 Webhook rate limit exceeded for IP: ${clientIP}`);
       return NextResponse.json(
         { message: "Rate limit exceeded" },
         { status: 429 }
@@ -289,7 +292,7 @@ export async function POST(req) {
     const rawBody = await req.text();
     const payload = JSON.parse(rawBody);
 
-    // Verify webhook signature
+    // Step 18: Verify webhook signature
     const signature = req.headers.get("x-paystack-signature");
     if (!signature) {
       console.error("❌ Missing webhook signature");
@@ -314,7 +317,7 @@ export async function POST(req) {
 
     console.log(`✅ Webhook signature verified for event: ${payload.event}`);
 
-    // Process charge.success events
+    // Step 19: Process charge.success events
     if (payload.event === "charge.success") {
       const transactionData = payload.data;
       const { status, reference, amount, metadata, customer } = transactionData;
@@ -346,7 +349,7 @@ export async function POST(req) {
         `🎣 Webhook processing payment for permit ${permit_id}, reference: ${reference}`
       );
 
-      // Check if already processed
+      // Step 20: Check if already processed
       const { data: existing } = await supabaseAdmin
         .from("permits")
         .select("status")
@@ -359,7 +362,7 @@ export async function POST(req) {
         return NextResponse.json({ message: "Already processed" });
       }
 
-      // Update permit with webhook data
+      // Step 21: Update permit with webhook data
       const updateResult = await retryDatabaseOperation(async () => {
         const { data, error } = await supabaseAdmin
           .from("permits")
@@ -393,7 +396,7 @@ export async function POST(req) {
       return NextResponse.json({ message: "Payment processed successfully" });
     }
 
-    // Log other webhook events
+    // Step 22: Log other webhook events
     console.log(`📝 Webhook event received: ${payload.event}`);
     return NextResponse.json({ message: "Event acknowledged" });
   } catch (error) {
