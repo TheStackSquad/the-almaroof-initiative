@@ -1,3 +1,5 @@
+//src/utils/validate/validatePermitForm.js
+
 import { z } from "zod";
 import { getPermitFee } from "@/config/permitFees";
 import DOMPurify from "dompurify";
@@ -12,21 +14,29 @@ const sanitizeInput = (value) => {
 const isValidNGRPhone = (phone) => {
   // More inclusive Nigerian phone validation
   const regex = /^(?:\+234|0|234)?[7-9][0-1]\d{8}$/;
-  const cleaned = phone.replace(/\D/g, ''); // Remove all non-digits
-  
+  const cleaned = phone.replace(/\D/g, ""); // Remove all non-digits
+
   // Standardize to 11 digits (0XXXXXXXXXX) for comparison
   let standardized = cleaned;
-  if (cleaned.startsWith('234') && cleaned.length === 13) {
-    standardized = '0' + cleaned.substring(3);
-  } else if (cleaned.startsWith('+234') && cleaned.length === 14) {
-    standardized = '0' + cleaned.substring(4);
+  if (cleaned.startsWith("234") && cleaned.length === 13) {
+    standardized = "0" + cleaned.substring(3);
+  } else if (cleaned.startsWith("+234") && cleaned.length === 14) {
+    standardized = "0" + cleaned.substring(4);
   }
-  
+
   return regex.test(cleaned) && standardized.length === 11;
 };
 
-// Create Zod schema
-export const permitSchema = z.object({
+// Helper function for amount formatting (if needed elsewhere)
+const formatAmount = (amount) => {
+  return new Intl.NumberFormat("en-NG", {
+    style: "currency",
+    currency: "NGN",
+  }).format(amount);
+};
+
+// Base schema without amount cross-validation
+const basePermitSchema = z.object({
   full_name: z
     .string()
     .min(1, "Full name is required")
@@ -50,30 +60,39 @@ export const permitSchema = z.object({
 
   application_type: z.string().min(1, "Application type is required"),
 
-  // Updated amount validation
+  // Simplified amount validation - only basic checks
   amount: z
     .union([z.number(), z.string()])
     .transform((val) => (typeof val === "string" ? parseFloat(val) : val))
-    .refine((val) => !isNaN(val) && val > 0, "Amount must be a positive number")
     .refine(
-      (amount, ctx) => {
-        const { permit_type, application_type } = ctx.parent;
-        if (!permit_type || !application_type) return true;
-
-        const expectedAmount = getPermitFee(permit_type, application_type);
-        return amount === expectedAmount;
-      },
-      (amount, ctx) => {
-        const { permit_type, application_type } = ctx.parent;
-        const expectedAmount = getPermitFee(permit_type, application_type);
-        return {
-          message: `Incorrect amount. Expected ${formatAmount(
-            expectedAmount
-          )} for ${application_type} ${permit_type.replace("-", " ")}`,
-        };
-      }
+      (val) => !isNaN(val) && val > 0,
+      "Amount must be a positive number"
     ),
 });
+
+// Add cross-field validation at the schema level
+export const permitSchema = basePermitSchema.refine(
+  (data) => {
+    const { amount, permit_type, application_type } = data;
+
+    // Only validate if all required fields are present
+    if (!permit_type || !application_type) return true;
+
+    const expectedAmount = getPermitFee(permit_type, application_type);
+    return amount === expectedAmount;
+  },
+  (data) => {
+    const { permit_type, application_type } = data;
+    const expectedAmount = getPermitFee(permit_type, application_type);
+
+    return {
+      message: `Incorrect amount. Expected ${formatAmount(
+        expectedAmount
+      )} for ${application_type} ${permit_type.replace("-", " ")}`,
+      path: ["amount"], // Specify that this error belongs to the amount field
+    };
+  }
+);
 
 // Create form data version for form submission
 export const permitFormDataSchema = permitSchema.transform((val) => ({

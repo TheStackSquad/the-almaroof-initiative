@@ -1,5 +1,4 @@
 //src/app/api/permits/create/route.js
-
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
@@ -9,10 +8,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 export async function POST(request) {
   try {
-    // ------------------------------------
-    // START: ADDED LOGGING
     console.log("--- API Route: /api/permits/create POST request received ---");
-    // ------------------------------------
 
     // 1. Get the token from the HttpOnly cookie
     const cookieStore = await cookies();
@@ -21,40 +17,30 @@ export async function POST(request) {
     if (!tokenCookie) {
       console.log("❌ No auth token cookie found for permit creation.");
       return NextResponse.json(
-        { success: false, error: "Authentication token is missing." },
+        { message: "Authentication token is missing." },
         { status: 401 }
       );
     }
 
     const token = tokenCookie.value;
-    // ------------------------------------
-    // START: ADDED LOGGING
     console.log("✅ Auth token found.");
-    // ------------------------------------
 
     // 2. Verify the token
     const decoded = jwt.verify(token, JWT_SECRET);
     const userId = decoded.userId || decoded.id;
-    // ------------------------------------
-    // START: ADDED LOGGING
     console.log("✅ Token decoded. User ID:", userId);
-    console.log("Decoded token payload:", decoded);
-    // ------------------------------------
 
     if (!userId) {
       console.log("❌ No user ID found in token.");
       return NextResponse.json(
-        { success: false, error: "Invalid user context." },
+        { message: "Invalid user context." },
         { status: 401 }
       );
     }
 
     // 3. Get request body
     const permitData = await request.json();
-    // ------------------------------------
-    // START: ADDED LOGGING
     console.log("✅ Request body parsed. Received data:", permitData);
-    // ------------------------------------
 
     // 4. Validate required fields
     const requiredFields = {
@@ -71,36 +57,34 @@ export async function POST(request) {
       .map(([_, message]) => message);
 
     if (missingFields.length > 0) {
-      // ------------------------------------
-      // START: ADDED LOGGING
       console.log("❌ Missing required fields:", missingFields.join(", "));
-      // ------------------------------------
       return NextResponse.json(
-        { success: false, error: missingFields.join(", ") },
+        { message: missingFields.join(", ") },
         { status: 400 }
       );
     }
 
     console.log("🏗️ Creating permit for user:", userId);
 
-    // 5. Create permit using admin client (bypasses RLS)
-    // ------------------------------------
-    // START: ADDED LOGGING
     const insertData = {
       full_name: permitData.full_name.trim(),
       email: decoded.email || permitData.email.trim(),
       phone: permitData.phone.trim(),
       permit_type: permitData.permit_type,
       application_type: permitData.application_type,
-      amount: Number(permitData.amount) / 100,
+      amount: permitData.amount,
       user_id: userId,
-      status: "unpaid",
+      // CORRECTED: The database 'permits_status_check' constraint
+      // does not allow the value 'unpaid'.
+      // The `users_update_retryable_permits` policy suggests 'pending_payment'
+      // is a valid status for new insertions.
+      status: "pending_payment",
     };
+
     console.log(
       "Attempting to insert the following data into 'permits' table:",
       insertData
     );
-    // ------------------------------------
 
     const { data, error } = await supabaseAdmin
       .from("permits")
@@ -110,29 +94,23 @@ export async function POST(request) {
 
     if (error) {
       console.error("🚨 Supabase insertion failed:", error);
-      // ------------------------------------
-      // START: ADDED LOGGING
       console.error("Supabase error details:", {
         code: error.code,
         message: error.message,
         details: error.details,
       });
-      // ------------------------------------
       throw error;
     }
 
     console.log("✅ Permit created successfully:", data.id);
-    // ------------------------------------
-    // START: ADDED LOGGING
     console.log("Successfully created permit data:", data);
     console.log("--- API Route: /api/permits/create request completed ---");
-    // ------------------------------------
 
     return NextResponse.json(
       {
         success: true,
-        data,
         message: "Permit created successfully",
+        data: data,
       },
       { status: 201 }
     );
@@ -145,7 +123,7 @@ export async function POST(request) {
       error.name === "TokenExpiredError"
     ) {
       const response = NextResponse.json(
-        { success: false, error: "Session expired. Please log in again." },
+        { message: "Session expired. Please log in again." },
         { status: 401 }
       );
 
@@ -163,9 +141,7 @@ export async function POST(request) {
 
     return NextResponse.json(
       {
-        success: false,
-        error: error.message || "Failed to create permit",
-        details: error.details,
+        message: error.message || "Failed to create permit",
       },
       { status: 500 }
     );

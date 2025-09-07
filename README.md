@@ -1,36 +1,118 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+Authentication & Payment Gateway Security Overhaul
+Objective
+To implement a secure, robust, and industry-standard authentication and payment flow that eliminates client-side trust for sensitive operations.
 
-## Getting Started
+Core Principles
+Server-Side Authority: All validation, price calculation, and payment initiation occur on the server.
 
-First, run the development server:
+HttpOnly Cookies: JWTs are stored exclusively in secure, HttpOnly cookies to mitigate XSS attacks.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Short-Lived Access + Long-Lived Refresh: Implemented a refresh token rotation pattern for both security and user experience.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Defensive Monitoring: Added client and server-side security event logging with pattern detection.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+Key Changes
+Category
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+File
 
-## Learn More
+Change Description
 
-To learn more about Next.js, take a look at the following resources:
+Auth API
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+src/app/api/auth/refresh/route.js
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+(NEW) Endpoint to securely issue new access tokens using a refresh token.
 
-## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+src/app/api/auth/signin/route.js
+
+Enhanced to set access and refresh tokens as HttpOnly cookies.
+
+
+
+src/app/api/auth/validate-token/route.js
+
+(DELETED) Removed redundant endpoint; token validation is now middleware.
+
+Payment API
+
+src/app/api/paystack/initiate/route.js
+
+Secured to use server-side permit data, ignoring client-provided amount and reference.
+
+
+
+src/app/api/paystack/verify/route.js
+
+Enhanced with robust rate limiting and error handling.
+
+Security API
+
+src/app/api/security/events/route.js
+
+(NEW) Endpoint to receive and store client-side security logs.
+
+Client Auth
+
+src/redux/action/authAction.js
+
+Refactored to handle cookie-based auth, removing insecure localStorage logic.
+
+
+
+src/utils/auth/useAuth.js
+
+Enhanced hook with computed auth state, auto-refresh logic, and security monitoring.
+
+
+
+src/utils/auth/authHelpers.js
+
+(NEW) Contains RefreshManager for race-condition-proof token refresh.
+
+
+
+src/utils/auth/tokenUtils.js
+
+(NEW) Pure functions for token expiry calculation and validation.
+
+
+
+src/utils/auth/authTypes.js
+
+(NEW) Centralized configuration for security thresholds and constants.
+
+
+
+src/utils/auth/securityLogger.js
+
+(NEW) Client-side module for structured security event logging.
+
+Payment Flow
+
+src/utils/handlers/paystackHandler.js
+
+Refactored to only send a permit_id to the secure initiate endpoint.
+
+
+
+src/utils/supabase/createPermit.js
+
+Cleaned up logging and aligned with server API.
+
+Utilities
+
+src/utils/rate-limit.js
+
+(NEW) Shared utility for API rate limiting.
+
+
+
+src/lib/authService/token.js
+
+Enhanced to generate both access and refresh tokens.
+
+Summary
+The system now enforces a secure flow where the client is never trusted with token storage, price calculation, or payment parameters. All critical logic is validated and executed on the server, significantly reducing the attack surface for the payment gateway.

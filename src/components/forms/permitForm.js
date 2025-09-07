@@ -1,18 +1,18 @@
-// src/components/forms/permitForm.js
+//src/components/forms/permitForm.js
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useAuth } from "@/utils/auth/useAuth";
+import { z } from "zod";
 
-// Utils and configs
-import validatePermitForm from "@/utils/validate/validatePermitForm";
+// Import the Zod schema
+import { permitSchema } from "@/utils/validate/validatePermitForm";
 import { onSubmitPermitForm } from "@/utils/handlers/onSubmitPermitForm";
 import { showToast } from "@/components/common/toastAlert/toast";
-import { getPermitFee, formatAmount } from "@/config/permitFees";
-import { checkSession } from "@/redux/action/authAction";
+import { getPermitFee } from "@/config/permitFees";
 
 // Static imports for critical components
 import FormHeader from "@/components/forms/formHeader";
@@ -39,11 +39,12 @@ import {
   selectUserPhone,
   selectUserName,
 } from "@/redux/lib/constant";
+import { checkSession } from "@/redux/action/authAction";
 
 export default function PermitForm({ permitType = "business-permit" }) {
   const router = useRouter();
   const dispatch = useDispatch();
-  const { requireAuth } = useAuth(); // Use the auth hook
+  const { requireAuth } = useAuth();
 
   // Memoized selectors for performance
   const authState = useSelector(selectAuthState);
@@ -107,11 +108,56 @@ export default function PermitForm({ permitType = "business-permit" }) {
 
   // Update amount when permit/application type changes
   useEffect(() => {
+    console.log("🔄 Checking for fee calculation:", {
+      permit_type: formData.permit_type,
+      application_type: formData.application_type,
+      hasPermitType: !!formData.permit_type,
+      hasApplicationType: !!formData.application_type,
+    });
+
     if (formData.permit_type && formData.application_type) {
+      console.log("✅ Conditions met, calculating fee...");
+
       const fee = getPermitFee(formData.permit_type, formData.application_type);
-      setFormData((prev) => ({ ...prev, amount: fee }));
+
+      console.log("💰 Fee calculation result:", {
+        rawFee: fee,
+        formattedFee: `₦${(fee / 100).toLocaleString("en-NG", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
+      });
+
+      // Only update if amount is different to prevent infinite loops
+      if (formData.amount !== fee) {
+        console.log(
+          "📊 Updating formData amount from",
+          formData.amount,
+          "to",
+          fee
+        );
+        setFormData((prev) => ({ ...prev, amount: fee }));
+      } else {
+        console.log("⚡ Amount unchanged, skipping update");
+      }
+    } else {
+      console.log("❌ Conditions not met for fee calculation");
     }
-  }, [formData.permit_type, formData.application_type]);
+  }, [formData.permit_type, formData.application_type, formData.amount]); // Added formData.amount to dependencies
+
+  // Add this useEffect to log formData changes
+  useEffect(() => {
+    console.log("📝 FormData updated:", {
+      ...formData,
+      amountDetails: {
+        raw: formData.amount,
+        formatted: `₦${(formData.amount / 100).toLocaleString("en-NG", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
+      },
+    });
+  }, [formData]);
 
   // Optimized event handlers
   const handleChange = useCallback(
@@ -126,15 +172,25 @@ export default function PermitForm({ permitType = "business-permit" }) {
     [errors]
   );
 
+  // Add log to handleTypeChange
   const handleTypeChange = useCallback(
     (e) => {
       const { value } = e.target;
+      console.log("🎯 Application type changed to:", value);
+
       const fee = getPermitFee(formData.permit_type, value);
+      console.log("💳 New fee calculated:", {
+        raw: fee,
+        formatted: `₦${(fee / 100).toLocaleString("en-NG", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
+      });
 
       setFormData((prev) => ({
         ...prev,
         application_type: value,
-        amount: fee,
+        amount: fee, // This should update the amount
       }));
 
       if (errors.application_type) {
@@ -144,40 +200,105 @@ export default function PermitForm({ permitType = "business-permit" }) {
     [formData.permit_type, errors.application_type]
   );
 
+  // Add this right after the component declaration to log initial config
+  useEffect(() => {
+    console.log("🎛️ Permit fees configuration:", {
+      businessPermitNew: getPermitFee("business-permit", "new"),
+      businessPermitRenew: getPermitFee("business-permit", "renew"),
+      buildingPermitNew: getPermitFee("building-permit", "new"),
+      buildingPermitRenew: getPermitFee("building-permit", "renew"),
+      eventPermitNew: getPermitFee("event-permit", "new"),
+      eventPermitRenew: getPermitFee("event-permit", "renew"),
+    });
+  }, []);
+
   const handleSubmit = useCallback(
     async (e) => {
       e.preventDefault();
       setErrors({});
       setLoading(true);
 
+      console.log("🚀 SUBMISSION STARTED", { formData });
+
       try {
-        // Validate form first
-        const formErrors = validatePermitForm(formData);
-        if (Object.keys(formErrors).length > 0) {
-          setErrors(formErrors);
+        // Step 1: Validate form data using Zod schema
+        console.log("📋 Validating form data...");
+        const result = permitSchema.safeParse(formData);
+        console.log("✅ Validation result:", result);
+
+        if (!result.success) {
+          // Step 2: Format validation errors for display
+          console.log("❌ Validation failed. Processing errors...");
+          const formattedErrors = result.error.issues.reduce((acc, issue) => {
+            console.log("📝 Error issue:", {
+              path: issue.path,
+              message: issue.message,
+              code: issue.code,
+            });
+
+            if (issue.path.length > 0) {
+              const fieldName = issue.path[0];
+              acc[fieldName] = issue.message;
+              console.log(`🔴 Field error: ${fieldName} - ${issue.message}`);
+            } else if (issue.message) {
+              // Handle schema-level errors without specific paths
+              acc.submit = issue.message;
+              console.log(`🔴 Schema error: ${issue.message}`);
+            }
+            return acc;
+          }, {});
+
+          console.log("📊 Formatted errors object:", formattedErrors);
+          setErrors(formattedErrors);
           showToast("Please fix the errors in the form", "error");
           setLoading(false);
           return;
         }
 
-        const result = await onSubmitPermitForm(formData, authState);
+        console.log("✅ Form validation passed. Proceeding to submission...");
 
-        if (result.requiresAuth) {
+        // Step 3: Submit validated data to backend API
+        console.log("📤 Submitting to API...", { data: result.data });
+        const resultFromSubmitHandler = await onSubmitPermitForm(
+          result.data,
+          authState
+        );
+        console.log("📥 API response:", resultFromSubmitHandler);
+
+        // Step 4: Handle authentication requirements
+        if (resultFromSubmitHandler.requiresAuth) {
+          console.log("🔐 Authentication required, redirecting...");
           router.push("/auth-entry");
           return;
         }
 
-        if (!result.success) {
-          setErrors({ submit: result.error });
-          showToast(result.error || "Submission failed", "error");
+        // Step 5: Handle submission failures
+        if (!resultFromSubmitHandler.success) {
+          console.log(
+            "❌ API submission failed:",
+            resultFromSubmitHandler.error
+          );
+          setErrors({ submit: resultFromSubmitHandler.error });
+          showToast(
+            resultFromSubmitHandler.error || "Submission failed",
+            "error"
+          );
           return;
         }
 
-        // Redirect to payment first
-        if (result.data?.payment_url) {
-          router.push(result.data.payment_url);
+        console.log("✅ API submission successful");
+
+        // Step 6: Handle successful submission
+        if (resultFromSubmitHandler.data?.payment_url) {
+          // Step 6a: Redirect to payment if required
+          console.log(
+            "💳 Redirecting to payment:",
+            resultFromSubmitHandler.data.payment_url
+          );
+          router.push(resultFromSubmitHandler.data.payment_url);
         } else {
-          // If no payment needed, show success
+          // Step 6b: Show success message if no payment needed
+          console.log("🎉 No payment required, showing success");
           showToast("Permit application submitted!", "success");
           setFormData((prev) => ({
             ...prev,
@@ -186,10 +307,17 @@ export default function PermitForm({ permitType = "business-permit" }) {
           }));
         }
       } catch (error) {
-        console.error("Submission error:", error);
+        // Step 7: Handle unexpected errors
+        console.error("💥 Unexpected submission error:", {
+          message: error.message,
+          stack: error.stack,
+          formData: formData,
+        });
         setErrors({ submit: error.message });
         showToast("An unexpected error occurred", "error");
       } finally {
+        // Step 8: Clean up loading state
+        console.log("🏁 Submission process completed");
         setLoading(false);
       }
     },
@@ -256,6 +384,7 @@ export default function PermitForm({ permitType = "business-permit" }) {
             email={formData.email}
             permitType={formData.permit_type}
             applicationType={formData.application_type}
+            amount={formData.amount} // Pass the amount for proper formatting
           />
         )}
       </div>

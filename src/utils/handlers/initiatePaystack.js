@@ -1,12 +1,17 @@
 // src/utils/handlers/initiatePaystack.js
-export const initiatePaystackPayment = async ({ email, amount, reference }) => {
+export const initiatePaystackPayment = async ({
+  email,
+  amount,
+  reference,
+  permit_id,
+}) => {
   try {
     const response = await fetch("/api/paystack/initiate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email, amount, reference }),
+      body: JSON.stringify({ email, amount, reference, permit_id }),
     });
 
     if (!response.ok) {
@@ -14,7 +19,7 @@ export const initiatePaystackPayment = async ({ email, amount, reference }) => {
     }
 
     const data = await response.json();
-    return data; // e.g., { authorization_url: "https://paystack..." }
+    return data;
   } catch (err) {
     console.error("Paystack initiation failed:", err.message);
     throw err;

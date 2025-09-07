@@ -2,41 +2,46 @@
 
 import { supabaseAdmin } from "@/utils/supabase/supabaseAdmin";
 
-// Define constants for the rate-limiting policy
-const MAX_FAILED_ATTEMPTS = 5; // The maximum number of failed attempts before locking the account
-const LOCK_DURATION_HOURS = 1; // The number of hours the account will be locked
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MINUTES = 15;
 
-export const handleFailedAttempts = async (user) => {
-  const { failed_attempts_count } = user;
-
-  const newFailedAttemptsCount = failed_attempts_count + 1;
-  let account_locked_until = null;
-
-  // Check if the new count exceeds the maximum allowed attempts
-  if (newFailedAttemptsCount >= MAX_FAILED_ATTEMPTS) {
-    // Lock the account for the specified duration
-    const lockUntil = new Date();
-    lockUntil.setHours(lockUntil.getHours() + LOCK_DURATION_HOURS);
-    account_locked_until = lockUntil.toISOString();
-    console.warn(
-      `🔐 Account for user ${user.id} has been locked until ${account_locked_until}`
-    );
-  }
-
+export async function handleFailedAttempts(user) {
   try {
+    const newFailedCount = (user.failed_attempts_count || 0) + 1;
+    let accountLockedUntil = null;
+
+    // Lock account if max attempts reached
+    if (newFailedCount >= MAX_FAILED_ATTEMPTS) {
+      accountLockedUntil = new Date(
+        Date.now() + LOCKOUT_DURATION_MINUTES * 60 * 1000
+      ).toISOString();
+    }
+
+    // Update user_exists table with new failed attempt count
     const { error } = await supabaseAdmin
-      .from("users")
+      .from("user_exists")
       .update({
-        failed_attempts_count: newFailedAttemptsCount,
-        last_login_attempt: new Date().toISOString(),
-        account_locked_until,
+        failed_attempts_count: newFailedCount,
+        account_locked_until: accountLockedUntil,
       })
       .eq("id", user.id);
 
     if (error) {
       console.error("🚨 Error updating failed attempts count:", error);
+      throw error;
     }
-  } catch (err) {
-    console.error("🚨 Unexpected error in handleFailedAttempts:", err);
+
+    if (accountLockedUntil) {
+      console.warn(
+        `Account locked for user ${user.id} until ${accountLockedUntil} after ${newFailedCount} failed attempts.`
+      );
+    } else {
+      console.log(
+        `Failed attempt #${newFailedCount} recorded for user ${user.id}.`
+      );
+    }
+  } catch (error) {
+    console.error("Error in handleFailedAttempts:", error);
+    throw error;
   }
-};
+}

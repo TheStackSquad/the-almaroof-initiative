@@ -1,21 +1,27 @@
-// src/config/permitFees.js
 export const PERMIT_FEES = {
   "business-permit": {
-    new: 2500, // ₦250 in kobo - final amount should be two thousand, five hundred naira in figure, the same goes for others
-    renew: 1500, // ₦150 in kobo
+    new: 250000, // ₦2,500.00 (250,000 kobo)
+    renew: 150000, // ₦1,500.00 (150,000 kobo)
   },
   "building-permit": {
-    new: 5000, // ₦500 in kobo
-    renew: 3000, // ₦300 in kobo
+    new: 500000, // ₦5,000.00
+    renew: 300000, // ₦3,000.00
   },
   "event-permit": {
-    new: 1000, // ₦100 in kobo
-    renew: 750, // ₦75 in kobo
+    new: 150000, // ₦1,500.00
+    renew: 75000, // ₦750.00
   },
 };
 
 export const formatAmount = (amountInKobo) => {
-  return `₦${(amountInKobo / 100).toFixed(2)}`;
+  // Handle both integer and decimal string inputs
+  const numericAmount =
+    typeof amountInKobo === "string" ? parseFloat(amountInKobo) : amountInKobo;
+
+  return `₦${(numericAmount / 100).toLocaleString("en-NG", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 };
 
 export const getPermitFee = (permitType, applicationType) => {

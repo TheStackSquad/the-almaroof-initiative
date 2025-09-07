@@ -95,6 +95,54 @@ const authReducer = (state = AUTH_INITIAL_STATE, action) => {
         token: null,
       };
 
+    // Forgot Password Cases
+    case AUTH_ACTIONS.FORGOT_PASSWORD_REQUEST:
+      return {
+        ...state,
+        loading: true,
+        error: null,
+      };
+
+    case AUTH_ACTIONS.FORGOT_PASSWORD_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        message: action.payload,
+        error: null,
+      };
+
+    case AUTH_ACTIONS.FORGOT_PASSWORD_FAILURE:
+      return {
+        ...state,
+        loading: false,
+        error: action.payload,
+        message: null,
+      };
+
+    // NEW: Reset Password Cases
+    case AUTH_ACTIONS.RESET_PASSWORD_REQUEST:
+      return {
+        ...state,
+        loading: true,
+        error: null,
+      };
+
+    case AUTH_ACTIONS.RESET_PASSWORD_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        message: action.payload,
+        error: null,
+      };
+
+    case AUTH_ACTIONS.RESET_PASSWORD_FAILURE:
+      return {
+        ...state,
+        loading: false,
+        error: action.payload,
+        message: null,
+      };
+
     // Google OAuth
     case AUTH_ACTIONS.GOOGLE_AUTH_REQUEST:
       return {

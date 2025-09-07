@@ -1,10 +1,25 @@
 // src/utils/handlers/paystackHandler.js
-export const initiatePaystackPayment = async (permit_id) => {
+export const initiatePaystackPayment = async (paymentData) => {
   const isDevelopment = process.env.NODE_ENV === "development";
 
   try {
     if (isDevelopment) {
-      console.log("initiatePaystackPayment called with permit_id:", permit_id);
+      console.log(
+        "initiatePaystackPayment called with paymentData:",
+        paymentData
+      );
+    }
+
+    // ✅ EXTRACT permit_id from the paymentData object
+    const permit_id = paymentData.permit_id;
+    const reference = paymentData.reference;
+
+    if (!permit_id) {
+      console.error("❌ Missing permit_id in payment data");
+      return {
+        success: false,
+        error: "Missing permit ID for payment initialization",
+      };
     }
 
     const response = await fetch("/api/paystack/initiate", {
@@ -13,7 +28,8 @@ export const initiatePaystackPayment = async (permit_id) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        permit_id, // Now only sending the permit_id
+        permit_id,
+        reference,
       }),
     });
 
@@ -38,7 +54,7 @@ export const initiatePaystackPayment = async (permit_id) => {
     return {
       success: true,
       authorization_url: data.authorization_url,
-      reference: data.reference, // Use the reference returned by the server
+      reference: data.reference,
     };
   } catch (error) {
     console.error("Paystack initialization network error:", error);

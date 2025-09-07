@@ -1,21 +1,24 @@
 // src/app/api/paystack/initiate/route.js
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/utils/supabase/supabaseAdmin"; // Critical import added
+import { supabaseAdmin } from "@/utils/supabase/supabaseAdmin";
+import { PERMIT_STATUS } from "@/components/common/permitStatus";
 
-// Step 1: Determine environment for logging
 const isDevelopment = process.env.NODE_ENV === "development";
 
 export async function POST(req) {
   try {
-    // Step 2: Parse incoming request
-    const { permit_id } = await req.json();
+    // FIX 1: Extract permit_id from root level (not from metadata)
+    const { reference, permit_id } = await req.json();
 
     if (isDevelopment) {
       console.log("--- /api/paystack/initiate: POST request received ---");
-      console.log("Received permit_id:", permit_id);
+      console.log("Received parameters:", {
+        reference,
+        permit_id,
+      });
     }
 
-    // Step 3: Validate required field
+    // FIX 2: Validate required fields including permit_id
     if (!permit_id) {
       if (isDevelopment) {
         console.log("❌ Validation failed: Missing permit_id.");
@@ -26,7 +29,7 @@ export async function POST(req) {
       );
     }
 
-    // Step 4: Fetch the permit from the database
+    // Step 1: Fetch the permit from database
     const { data: permit, error: permitError } = await supabaseAdmin
       .from("permits")
       .select("*")
@@ -41,18 +44,46 @@ export async function POST(req) {
       );
     }
 
-    // Step 5: Validate permit is in an unpaid state
-    if (permit.status !== "unpaid") {
+    // FIX 3: Validate permit is in pending_payment state (not unpaid)
+    if (permit.status !== PERMIT_STATUS.PENDING_PAYMENT) {
       if (isDevelopment) {
-        console.log(`❌ Permit status is '${permit.status}', not 'unpaid'.`);
+        console.log(
+          `❌ Permit status is '${permit.status}', not '${PERMIT_STATUS.PENDING_PAYMENT}'.`
+        );
       }
       return NextResponse.json(
-        { error: "This permit has already been processed" },
+        { error: "This permit has already been processed or expired" },
         { status: 400 }
       );
     }
 
-    // Step 6: Get Paystack secret key
+    // FIX 4: Validate payment attempts
+    if (permit.payment_attempts >= 3) {
+      if (isDevelopment) {
+        console.log(
+          `❌ Maximum payment attempts (3) reached for permit ${permit_id}`
+        );
+      }
+      return NextResponse.json(
+        { error: "Maximum payment attempts reached. Please contact support." },
+        { status: 400 }
+      );
+    }
+
+    // FIX 5: Validate expiration
+    if (new Date(permit.expires_at) < new Date()) {
+      if (isDevelopment) {
+        console.log(`❌ Permit ${permit_id} has expired`);
+      }
+      return NextResponse.json(
+        {
+          error: "Payment window has expired. Please create a new application.",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Step 2: Get Paystack secret key
     const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
     if (!paystackSecret) {
       console.error("❌ Server error: PAYSTACK_SECRET_KEY not configured.");
@@ -62,14 +93,21 @@ export async function POST(req) {
       );
     }
 
-    // Step 7: Prepare payment data from database values
-    const amountInKobo = Math.round(permit.amount * 100); // Convert decimal to kobo
-    const paymentReference = permit.reference; // Use server-generated reference
+    // FIX 6: Amount is already in kobo, no conversion needed
+    const amountInKobo = Number(permit.amount);
+    const paymentReference = reference || permit.reference;
+
+    if (isDevelopment) {
+      console.log("💰 Amount for Paystack:", {
+        amount_in_kobo: amountInKobo,
+        formatted_display: `₦${(amountInKobo / 100).toFixed(2)}`,
+      });
+    }
 
     const paymentData = {
-      email: permit.email, // From database
-      amount: amountInKobo, // From database
-      reference: paymentReference, // From database
+      email: permit.email,
+      amount: amountInKobo, // Already in correct kobo format
+      reference: paymentReference,
       callback_url: `${process.env.NEXT_PUBLIC_SITE_URL}/community/online-services/business-permit/verify?reference=${paymentReference}`,
       metadata: {
         permit_id: permit.id,
@@ -86,7 +124,27 @@ export async function POST(req) {
       );
     }
 
-    // Step 8: Initialize transaction with Paystack
+    // FIX 7: Update permit status to payment_processing BEFORE initiating payment
+    const { error: updateError } = await supabaseAdmin
+      .from("permits")
+      .update({
+        status: PERMIT_STATUS.PAYMENT_PROCESSING,
+        payment_attempts: permit.payment_attempts + 1,
+        last_payment_attempt: new Date().toISOString(),
+        paystack_reference: paymentReference,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", permit_id);
+
+    if (updateError) {
+      console.error("❌ Failed to update permit status:", updateError);
+      return NextResponse.json(
+        { error: "Failed to prepare permit for payment" },
+        { status: 500 }
+      );
+    }
+
+    // Step 3: Initialize transaction with Paystack
     const response = await fetch(
       "https://api.paystack.co/transaction/initialize",
       {
@@ -101,9 +159,19 @@ export async function POST(req) {
 
     const paystackResponse = await response.json();
 
-    // Step 9: Handle Paystack API response
+    // Step 4: Handle Paystack API response
     if (!response.ok) {
       console.error("🚨 Paystack API error:", paystackResponse);
+
+      // Revert status to pending_payment on Paystack failure
+      await supabaseAdmin
+        .from("permits")
+        .update({
+          status: PERMIT_STATUS.PENDING_PAYMENT,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", permit_id);
+
       return NextResponse.json(
         { error: paystackResponse.message || "Payment initialization failed" },
         { status: response.status }
@@ -112,16 +180,18 @@ export async function POST(req) {
 
     if (isDevelopment) {
       console.log("✅ Paystack transaction initialized successfully.");
+      console.log("--- /api/paystack/initiate: request completed ---");
     }
 
-    // Step 10: Return success response to client
+    // Step 5: Return success response to client
     return NextResponse.json({
       authorization_url: paystackResponse.data.authorization_url,
       access_code: paystackResponse.data.access_code,
       reference: paystackResponse.data.reference,
+      permit_id: permit.id,
+      status: PERMIT_STATUS.PAYMENT_PROCESSING,
     });
   } catch (error) {
-    // Step 11: Handle unexpected errors
     console.error("🚨 Unexpected error in /api/paystack/initiate:", error);
     return NextResponse.json(
       { error: "Internal server error during payment initialization" },

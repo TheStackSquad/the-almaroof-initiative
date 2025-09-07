@@ -1,45 +1,49 @@
-// src/utils/supabase/createPermit.js
+// src/utils/supabase/createPermit.js - UPDATED
+import { PERMIT_STATUS } from "@/components/common/permitStatus";
 
 export const createPermitEntry = async (formData) => {
-  // Step 1: Determine environment for conditional logging
   const isDevelopment = process.env.NODE_ENV === "development";
 
   try {
-    // Step 2: Conditional logging for development only
     if (isDevelopment) {
       console.log("--- createPermitEntry initiated ---");
-      // Log a sanitized version or omit sensitive data in logs, even in development
       console.log("Received formData:", {
         ...formData,
-        // Optionally mask sensitive fields if they were present, e.g., email: '***'
+        formattedAmount: `${formData.amount} kobo (₦${(
+          formData.amount / 100
+        ).toFixed(2)})`,
       });
     }
 
-    // Step 3: Call the server-side API
+    // Send the ORIGINAL formData (with integer amount) to API
     const response = await fetch("/api/permits/create", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include", // Include cookies for authentication
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify(formData),
     });
 
-    // Step 4: Conditional logging for response status
-    if (isDevelopment) {
-      console.log("API response status:", response.status);
-      console.log("API response status text:", response.statusText);
+    // COMPLETE DEBUGGING PATTERN: Read response once as text
+    console.log("Response status:", response.status);
+    const responseText = await response.text();
+    console.log("Response text:", responseText);
+
+    let result;
+    try {
+      // Parse the text response manually to JSON
+      result = JSON.parse(responseText);
+      console.log("Parsed JSON result:", result);
+    } catch (parseError) {
+      console.error("JSON parse error:", parseError, "Raw text:", responseText);
+      throw new Error("Invalid JSON response from server");
     }
 
-    const result = await response.json();
-
-    // Step 5: Conditional logging for full response
     if (isDevelopment) {
+      console.log("API response status:", response.status);
       console.log("Parsed API response body:", result);
     }
 
     if (!response.ok) {
-      // Handle authentication errors
       if (response.status === 401) {
         if (isDevelopment) {
           console.warn(
@@ -53,17 +57,45 @@ export const createPermitEntry = async (formData) => {
         };
       }
 
+      // Handle duplicate submission
+      if (response.status === 409) {
+        return {
+          success: false,
+          error: "This application has already been submitted",
+          isDuplicate: true,
+          existingPermitId: result.existingPermitId,
+        };
+      }
+
       throw new Error(result.error || "Failed to create permit");
     }
 
-    // Step 6: Conditional success logging
+    // Validate response contains proper status
+    if (!result.data || !result.data.status) {
+      throw new Error("Invalid response from permit creation API");
+    }
+
+    // Check if permit is in expected state
+    if (result.data.status !== PERMIT_STATUS.PENDING_PAYMENT) {
+      if (isDevelopment) {
+        console.warn(
+          `Permit created with unexpected status: ${result.data.status}`
+        );
+      }
+    }
+
     if (isDevelopment) {
-      console.log("Permit created successfully. Result:", result);
+      console.log("Permit created successfully. Result:", {
+        ...result.data,
+        amount: `${result.data.amount} kobo (₦${(
+          result.data.amount / 100
+        ).toFixed(2)})`,
+      });
       console.log("--- createPermitEntry completed ---");
     }
-    return result; // { success: true, data: permitData, payment_authorization_url }
+
+    return result;
   } catch (error) {
-    // Step 7: Always log actual errors for debugging, regardless of environment
     console.error("Permit creation error caught:", error);
 
     return {

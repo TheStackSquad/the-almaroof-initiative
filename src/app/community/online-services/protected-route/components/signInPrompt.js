@@ -66,7 +66,7 @@ export default function SignInPrompt({
                 size="sm"
                 variant="light"
                 color="danger"
-                onClick={onRetry}
+                onPress={onRetry}
                 startContent={<RefreshCw className="w-3 h-3" />}
                 className="mt-3 text-xs"
                 aria-label="Retry authentication check"

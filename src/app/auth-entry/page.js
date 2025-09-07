@@ -16,8 +16,9 @@ function AuthEntryPageContent() {
     "/community/online-services/business-permit/apply";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-yellow-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-yellow-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center px-4 py-8 w-full">
+      {/* Remove max-w-md and use w-full with responsive max-width */}
+      <div className="w-full max-w-lg lg:max-w-4xl xl:max-w-6xl">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="mx-auto w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center shadow-lg mb-4">
@@ -31,8 +32,8 @@ function AuthEntryPageContent() {
           </p>
         </div>
 
-        {/* Main Auth Container */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+        {/* Main Auth Container - Make it full width on mobile, constrained on larger screens */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden w-full">
           {/* User Form (Traditional Auth) */}
           <UserForm redirectUrl={redirectUrl} />
 
@@ -67,8 +68,6 @@ function AuthEntryPageContent() {
 
 export default function AuthEntryPage() {
   return (
-    // The Suspense fallback is no longer strictly needed for auth checks,
-    // but it is good practice to keep it for any other asynchronous operations.
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center">

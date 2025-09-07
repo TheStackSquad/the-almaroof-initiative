@@ -1,24 +1,15 @@
 // src/components/common/authLoader.js
 import React from "react";
+import LoadingSpinner from "@/components/common/loadingSpinner";
 
 export default function AuthLoader({ message, type = "loading" }) {
-  // const isDark =
-  //   typeof window !== "undefined" &&
-  //   window.matchMedia("(prefers-color-scheme: dark)").matches;
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
       <div className="text-center">
         {type === "loading" ? (
+          // Use the LoadingSpinner component here
           <div className="relative mb-8">
-            <div className="w-20 h-20 mx-auto">
-              <div className="absolute inset-0 border-4 border-blue-200 dark:border-blue-800 rounded-full"></div>
-              <div className="absolute inset-0 border-4 border-transparent border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin"></div>
-              <div
-                className="absolute inset-2 border-2 border-transparent border-t-cyan-500 rounded-full animate-spin animate-reverse"
-                style={{ animationDuration: "1.5s" }}
-              ></div>
-            </div>
+            <LoadingSpinner size="lg" />
           </div>
         ) : (
           <div className="w-16 h-16 mx-auto mb-4 text-yellow-500">
