@@ -107,7 +107,8 @@ export class RefreshManager {
   }
 }
 
-export const createRouteProtector = (authHook) => {
+// FIXED: Remove circular dependency and implement auth logic directly
+export const createRouteProtector = (authContext) => {
   return (options = {}) => {
     const {
       redirectTo = "/login",
@@ -116,58 +117,184 @@ export const createRouteProtector = (authHook) => {
       logAccess = true,
       requiredRole = null,
       requiredPermissions = [],
+      autoRedirect = false,
     } = options;
 
-    const authResult = authHook.requireAuth({
-      redirectTo,
-      checkSession,
-      returnUrl,
-      logAccess,
-    });
+    const { isReady, isSecurelyAuthenticated, expired, sessionExpiry, user } =
+      authContext;
 
-    // Enhanced authorization checks
-    if (
-      authResult.authorized === true &&
-      (requiredRole || requiredPermissions.length > 0)
-    ) {
-      const user = authHook.user;
+    // Step 1: Check if auth system is ready
+    if (!isReady) {
+      if (logAccess) {
+        logSecurityEvent("auth_not_ready", {
+          userId: user?.id,
+          requestedPath: redirectTo,
+        });
+      }
+      return {
+        authorized: false,
+        redirected: false,
+        reason: "auth_not_ready",
+        redirectUrl: null,
+      };
+    }
 
-      // Role-based access control
-      if (requiredRole && user?.role !== requiredRole) {
-        logSecurityEvent("insufficient_role", {
-          requiredRole,
-          userRole: user?.role,
+    // Step 2: Check if session is expired
+    if (expired) {
+      if (logAccess) {
+        logSecurityEvent("session_expired_access_attempt", {
+          userId: user?.id,
+          requestedPath: redirectTo,
+        });
+      }
+
+      const redirectUrl = returnUrl
+        ? `${redirectTo}?redirect=${encodeURIComponent(
+            window?.location?.pathname || "/"
+          )}`
+        : redirectTo;
+
+      if (autoRedirect && typeof window !== "undefined") {
+        window.location.href = redirectUrl;
+        return {
+          authorized: false,
+          redirected: true,
+          reason: "session_expired",
+          redirectUrl,
+        };
+      }
+
+      return {
+        authorized: false,
+        redirected: false,
+        reason: "session_expired",
+        redirectUrl,
+      };
+    }
+
+    // Step 3: Check basic authentication
+    if (!isSecurelyAuthenticated) {
+      if (logAccess) {
+        logSecurityEvent("unauthorized_access_attempt", {
+          userId: user?.id,
+          requestedPath: redirectTo,
+        });
+      }
+
+      const redirectUrl = returnUrl
+        ? `${redirectTo}?redirect=${encodeURIComponent(
+            window?.location?.pathname || "/"
+          )}`
+        : redirectTo;
+
+      if (autoRedirect && typeof window !== "undefined") {
+        window.location.href = redirectUrl;
+        return {
+          authorized: false,
+          redirected: true,
+          reason: "not_authenticated",
+          redirectUrl,
+        };
+      }
+
+      return {
+        authorized: false,
+        redirected: false,
+        reason: "not_authenticated",
+        redirectUrl,
+      };
+    }
+
+    // Step 4: Check session validity if required
+    if (checkSession && sessionExpiry) {
+      const now = Date.now();
+      const sessionValid = sessionExpiry > now;
+
+      if (!sessionValid) {
+        if (logAccess) {
+          logSecurityEvent("session_expired", {
+            sessionExpiry,
+            currentTime: now,
+            userId: user?.id,
+          });
+        }
+
+        const redirectUrl = returnUrl
+          ? `${redirectTo}?redirect=${encodeURIComponent(
+              window?.location?.pathname || "/"
+            )}`
+          : redirectTo;
+
+        if (autoRedirect && typeof window !== "undefined") {
+          window.location.href = redirectUrl;
+          return {
+            authorized: false,
+            redirected: true,
+            reason: "session_invalid",
+            redirectUrl,
+          };
+        }
+
+        return {
+          authorized: false,
+          redirected: false,
+          reason: "session_invalid",
+          redirectUrl,
+        };
+      }
+    }
+
+    // Step 5: Role-based access control
+    if (requiredRole && user?.role !== requiredRole) {
+      logSecurityEvent("insufficient_role", {
+        requiredRole,
+        userRole: user?.role,
+        userId: user?.id,
+      });
+      return {
+        authorized: false,
+        redirected: false,
+        reason: "insufficient_role",
+        redirectUrl: "/unauthorized",
+      };
+    }
+
+    // Step 6: Permission-based access control
+    if (requiredPermissions.length > 0) {
+      const userPermissions = user?.permissions || [];
+      const hasAllPermissions = requiredPermissions.every((permission) =>
+        userPermissions.includes(permission)
+      );
+
+      if (!hasAllPermissions) {
+        logSecurityEvent("insufficient_permissions", {
+          requiredPermissions,
+          userPermissions,
           userId: user?.id,
         });
         return {
           authorized: false,
+          redirected: false,
+          reason: "insufficient_permissions",
           redirectUrl: "/unauthorized",
-          reason: "insufficient_role",
         };
-      }
-
-      // Permission-based access control
-      if (requiredPermissions.length > 0) {
-        const userPermissions = user?.permissions || [];
-        const hasAllPermissions = requiredPermissions.every((permission) =>
-          userPermissions.includes(permission)
-        );
-
-        if (!hasAllPermissions) {
-          logSecurityEvent("insufficient_permissions", {
-            requiredPermissions,
-            userPermissions,
-            userId: user?.id,
-          });
-          return {
-            authorized: false,
-            redirectUrl: "/unauthorized",
-            reason: "insufficient_permissions",
-          };
-        }
       }
     }
 
-    return authResult;
+    // Step 7: All checks passed - authorize access
+    if (logAccess) {
+      logSecurityEvent("authorized_access", {
+        userId: user?.id,
+        userRole: user?.role,
+        permissions: user?.permissions,
+      });
+    }
+
+    return {
+      authorized: true,
+      redirected: false,
+      reason: "authenticated",
+      redirectUrl: null,
+    };
   };
 };

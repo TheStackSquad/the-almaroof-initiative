@@ -12,6 +12,16 @@ export const AUTH_ACTIONS = {
   SIGNIN_SUCCESS: "auth/signinSuccess",
   SIGNIN_FAILURE: "auth/signinFailure",
 
+  // Password Reset Auth
+  FORGOT_PASSWORD_REQUEST: "auth/forgotPasswordRequest",
+  FORGOT_PASSWORD_SUCCESS: "auth/forgotPasswordSuccess",
+  FORGOT_PASSWORD_FAILURE: "auth/forgotPasswordFailure",
+
+  // Reset Password Actions
+  RESET_PASSWORD_REQUEST: "auth/resetPasswordRequest",
+  RESET_PASSWORD_SUCCESS: "auth/resetPasswordSuccess",
+  RESET_PASSWORD_FAILURE: "auth/resetPasswordFailure",
+
   // Google OAuth
   GOOGLE_AUTH_REQUEST: "auth/googleAuthRequest",
   GOOGLE_AUTH_SUCCESS: "auth/googleAuthSuccess",
@@ -26,15 +36,6 @@ export const AUTH_ACTIONS = {
   REFRESH_TOKEN_REQUEST: "auth/refreshTokenRequest",
   REFRESH_TOKEN_SUCCESS: "auth/refreshTokenSuccess",
   REFRESH_TOKEN_FAILURE: "auth/refreshTokenFailure",
-
-  // Profile Management
-  GET_PROFILE_REQUEST: "auth/getProfileRequest",
-  GET_PROFILE_SUCCESS: "auth/getProfileSuccess",
-  GET_PROFILE_FAILURE: "auth/getProfileFailure",
-
-  UPDATE_PROFILE_REQUEST: "auth/updateProfileRequest",
-  UPDATE_PROFILE_SUCCESS: "auth/updateProfileSuccess",
-  UPDATE_PROFILE_FAILURE: "auth/updateProfileFailure",
 
   // Logout
   LOGOUT_REQUEST: "auth/logoutRequest",
@@ -52,12 +53,13 @@ export const AUTH_ACTIONS = {
 export const API_ENDPOINTS = {
   SIGNUP: "/api/auth/signup",
   SIGNIN: "/api/auth/signin",
+  FORGOT_PASSWORD: "/api/auth/forgot-password",
+  RESET_PASSWORD: "/api/auth/reset-password",
   GOOGLE_AUTH: "/api/auth/google",
   GOOGLE_CALLBACK: "/api/auth/google/callback",
   VERIFY_SESSION: "/api/auth/verify",
   REFRESH_TOKEN: "/api/auth/refresh",
   LOGOUT: "/api/auth/logout",
-  PROFILE: "/api/auth/profile",
 };
 
 // Auth State Initial Values
@@ -102,15 +104,15 @@ export const AUTH_INITIAL_STATE = {
 
 // Error Messages
 export const AUTH_ERRORS = {
+  UNKNOWN_ERROR: "Something went wrong. Please try again.",
   NETWORK_ERROR: "Network error. Please check your connection.",
+  VALIDATION_ERROR: "Please check your input and try again.",
+  DUPLICATE_USER: "An account with this information already exists.",
+  RATE_LIMITED: "Too many attempts. Please wait before trying again.",
+  SERVER_ERROR: "Service temporarily unavailable. Please try again later.",
   INVALID_CREDENTIALS: "Invalid email or password.",
-  USER_EXISTS: "User with this email already exists.",
-  USER_NOT_FOUND: "User not found.",
-  VALIDATION_ERROR: "Please check your input data.",
-  SESSION_EXPIRED: "Your session has expired. Please sign in again.",
-  GOOGLE_AUTH_ERROR: "Google authentication failed.",
-  UNKNOWN_ERROR: "An unexpected error occurred.",
-  SERVER_ERROR: "Server error. Please try again later.",
+  EMAIL_NOT_VERIFIED: "Please verify your email address before signing in.",
+  ACCOUNT_LOCKED: "Account has been temporarily locked for security reasons.",
 };
 
 // Success Messages

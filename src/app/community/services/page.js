@@ -62,6 +62,28 @@ export default function ServicesPage() {
           </div>
 
           <div className="flex items-center space-x-4">
+            {/* Dashboard Button */}
+            <Link
+              href="/community/services/dashboard"
+              className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 transition-colors duration-300 group"
+            >
+              <svg
+                className="w-5 h-5 transition-transform group-hover:scale-110"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
+              </svg>
+              <span>My Dashboard</span>
+            </Link>
+
             {/* Back to Hub Button */}
             <Link
               href="/community"
@@ -69,7 +91,6 @@ export default function ServicesPage() {
             >
               ← Back to Hub
             </Link>
-            {/* Theme toggle button removed */}
           </div>
         </div>
 
@@ -94,7 +115,9 @@ export default function ServicesPage() {
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className="text-purple-600 dark:text-purple-400">📱</span>
+                  <span className="text-purple-600 dark:text-purple-400">
+                    📱
+                  </span>
                   <span className="text-purple-700 dark:text-purple-300 font-roboto">
                     24/7 application tracking
                   </span>
@@ -129,7 +152,9 @@ export default function ServicesPage() {
               <div className="flex items-center space-x-2">
                 <span className="text-2xl">✉️</span>
                 <div>
-                  <div className="font-semibold font-montserrat">Email Support</div>
+                  <div className="font-semibold font-montserrat">
+                    Email Support
+                  </div>
                   <div className="text-sm text-gray-500 dark:text-gray-400 font-roboto">
                     help@oshodi-isolo.gov.ng
                   </div>
@@ -138,7 +163,9 @@ export default function ServicesPage() {
               <div className="flex items-center space-x-2">
                 <span className="text-2xl">🕒</span>
                 <div>
-                  <div className="font-semibold font-montserrat">Office Hours</div>
+                  <div className="font-semibold font-montserrat">
+                    Office Hours
+                  </div>
                   <div className="text-sm text-gray-500 dark:text-gray-400 font-roboto">
                     Mon-Fri, 8AM-5PM
                   </div>

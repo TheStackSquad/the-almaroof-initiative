@@ -1,15 +1,6 @@
 // src/components/forms/authRequiredState.js
 import React, { memo } from "react";
 
-/**
- * A component to display a state requiring user authentication.
- * It shows a stylized message and a button to trigger a sign-in action.
- *
- * @param {object} props - The component props.
- * @param {function} props.onSignIn - Function to call when the sign-in button is clicked.
- * @param {string} props.title - Optional title for the authentication required message.
- * @param {string} props.message - Optional message explaining why sign-in is needed.
- */
 const AuthRequiredState = memo(({ onSignIn, title, message }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">

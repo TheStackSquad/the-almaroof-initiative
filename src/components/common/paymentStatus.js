@@ -1,5 +1,5 @@
 // src/components/common/paymentStatus.js
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   CheckCircle,
   Clock,
@@ -17,6 +17,7 @@ export const PaymentStatus = ({
   className = "",
   size = "default",
 }) => {
+  // State hooks should be declared at the top of the component
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [localStatus, setLocalStatus] = useState(status);
 
@@ -96,8 +97,8 @@ export const PaymentStatus = ({
 
   const sizeClasses = sizeConfig[size] || sizeConfig.default;
 
-  // Handle refresh with optimistic updates
-  const handleRefresh = async () => {
+  // Use useCallback to memoize the handleRefresh function
+  const handleRefresh = useCallback(async () => {
     if (!onRefresh || isRefreshing) return;
 
     setIsRefreshing(true);
@@ -111,9 +112,10 @@ export const PaymentStatus = ({
     } finally {
       setIsRefreshing(false);
     }
-  };
+  }, [onRefresh, isRefreshing, reference]); // These are the dependencies for handleRefresh
 
   // Auto-refresh for actionable statuses
+  // Now includes handleRefresh in its dependency array
   useEffect(() => {
     if (!config.actionable || !onRefresh) return;
 
@@ -124,7 +126,7 @@ export const PaymentStatus = ({
     }, 30000); // Refresh every 30 seconds for pending/processing
 
     return () => clearInterval(interval);
-  }, [config.actionable, onRefresh, isRefreshing]);
+  }, [config.actionable, onRefresh, isRefreshing, handleRefresh]); // Corrected dependency array
 
   // Time since last update
   const timeAgo = useMemo(() => {
@@ -143,9 +145,9 @@ export const PaymentStatus = ({
     <div className={`inline-flex items-center gap-2 ${className}`}>
       <div
         className={`
-        inline-flex items-center gap-2 rounded-full border font-medium transition-all duration-200
-        ${config.color} ${sizeClasses.container}
-      `}
+          inline-flex items-center gap-2 rounded-full border font-medium transition-all duration-200
+          ${config.color} ${sizeClasses.container}
+        `}
       >
         <Icon
           className={`${sizeClasses.icon} ${
@@ -182,7 +184,6 @@ export const PaymentStatus = ({
   );
 };
 
-// Enhanced hook for payment status management
 export const usePaymentStatus = (initialReference) => {
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -197,13 +198,12 @@ export const usePaymentStatus = (initialReference) => {
       setError(null);
 
       try {
-        // This would call your backend API
         const response = await fetch(`/api/payment/status/${reference}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include", // Include auth cookies
+          credentials: "include",
         });
 
         if (!response.ok) {
@@ -226,7 +226,6 @@ export const usePaymentStatus = (initialReference) => {
     [initialReference]
   );
 
-  // Initial load
   useEffect(() => {
     if (initialReference) {
       refreshStatus(initialReference);
