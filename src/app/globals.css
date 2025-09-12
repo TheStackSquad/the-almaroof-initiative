@@ -3,34 +3,12 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  /* Montserrat for headings */
-  @font-face {
-    font-family: 'Montserrat';
-    src: url('/fonz/MontserratAlternates-Bold.woff') format('woff');
-    font-weight: 700;
-    font-style: normal;
-    font-display: swap;
-  }
-  /* Roboto for body text */
-  @font-face {
-    font-family: 'Roboto';
-    src: url('/fonz/RobotoSlab-Bold.woff') format('woff');
-    font-weight: 700;
-    font-style: normal;
-    font-display: swap;
-  }
-
+body {
+    font-family: var(--font-roboto-slab);
 }
-/* 
- body {
-     font-family: 'Roboto', sans-serif;
-      @apply bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200;
-   } */
-
-   h1, h2, h3, h4, h5, h6 {
-     font-family: 'Montserrat', sans-serif;
-   }
+h1, h2, h3 {
+    font-family: var(--font-montserrat);
+}
 
    @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
