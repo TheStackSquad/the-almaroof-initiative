@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import {
   containerVariants,
   titleWordVariants,
-  paragraphVariants,
+//  paragraphVariants,
   glowVariants,
   particleVariants,
 } from "@/animation/animate";
