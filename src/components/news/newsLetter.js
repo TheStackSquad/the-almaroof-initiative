@@ -1,4 +1,6 @@
 // src/components/news/newsNewsletter.js
+'use client';
+
 import { useState } from "react";
 import { useFadeIn, useSlideIn } from "../../animation/aboutAnimate";
 

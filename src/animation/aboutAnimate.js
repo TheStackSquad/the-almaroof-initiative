@@ -144,7 +144,7 @@ export const useStaggerAnimation = (itemCount, delay = 100) => {
           observer.unobserve(currentRef);
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0 }
     );
 
     observer.observe(currentRef);

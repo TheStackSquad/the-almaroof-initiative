@@ -162,7 +162,9 @@ export default function Header() {
   };
 
   return (
-    <header className="w-full fixed top-0 z-50 bg-white/80 dark:bg-dark/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700">
+    <header className="w-full fixed top-0 z-50
+  bg-white/80 dark:bg-dark/80 backdrop-blur-md
+  border-b border-gray-200 dark:border-gray-700">
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-3 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="group">
