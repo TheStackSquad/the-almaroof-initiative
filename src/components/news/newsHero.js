@@ -1,4 +1,6 @@
 // src/components/news/newsHero.js
+"use client";
+
 import { useFadeIn, useSlideIn } from "../../animation/aboutAnimate";
 
 const NewsHero = () => {
